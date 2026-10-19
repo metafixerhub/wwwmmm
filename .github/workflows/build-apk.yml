@@ -25,13 +25,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.5'
+          gradle-version: '8.2'
 
       - name: Copy latest index.html to Android Assets
         run: |
@@ -41,9 +42,7 @@ jobs:
       - name: Build Debug APK with Gradle
         working-directory: android
         run: |
-          gradle wrapper
-          chmod +x gradlew || true
-          ./gradlew assembleDebug --stacktrace || gradle assembleDebug --stacktrace
+          gradle assembleDebug --stacktrace
 
       - name: Prepare APK Artifact
         run: |
@@ -58,7 +57,6 @@ jobs:
 
       - name: Create or Update GitHub Release with APK
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
         with:
           tag_name: v1.0.0
           name: "Release v1.0.0 - Android APK"

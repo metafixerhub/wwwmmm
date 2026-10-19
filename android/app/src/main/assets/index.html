@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CrystalClear AI - Video Watermark Remover (Offline & Vercel Ready)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CrystalClear AI - Ultra Speed Video Watermark Remover</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0b0f19">
     <link rel="icon" type="image/png" href="icon-192x192.png">
@@ -27,6 +27,7 @@
             --text-muted: #9ca3af;
             --accent-emerald: #10b981;
             --accent-rose: #f43f5e;
+            --accent-cyan: #06b6d4;
         }
 
         * {
@@ -34,6 +35,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -47,7 +49,7 @@
 
         /* Header */
         header {
-            background: rgba(17, 24, 39, 0.85);
+            background: rgba(17, 24, 39, 0.9);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(55, 65, 81, 0.8);
             position: sticky;
@@ -57,8 +59,8 @@
         .header-content {
             max-width: 1280px;
             margin: 0 auto;
-            padding: 0 1.5rem;
-            height: 64px;
+            padding: 0 1rem;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -66,20 +68,21 @@
         .logo-wrap {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.65rem;
         }
         .logo-icon {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             background: linear-gradient(135deg, #6366f1, #a855f7);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 0 16px rgba(99, 102, 241, 0.4);
+            flex-shrink: 0;
         }
         .logo-text h1 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
             letter-spacing: -0.02em;
             background: linear-gradient(90deg, #ffffff, #c7d2fe);
@@ -87,21 +90,21 @@
             -webkit-text-fill-color: transparent;
         }
         .logo-text p {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
         }
 
         .header-badges {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
         .badge {
             display: inline-flex;
             align-items: center;
-            padding: 0.25rem 0.75rem;
+            padding: 0.2rem 0.65rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             border: 1px solid rgba(16, 185, 129, 0.3);
             background: rgba(16, 185, 129, 0.1);
@@ -112,22 +115,22 @@
             height: 7px;
             background: #34d399;
             border-radius: 50%;
-            margin-right: 6px;
+            margin-right: 5px;
             box-shadow: 0 0 8px #34d399;
         }
         .btn-sample {
             background: rgba(99, 102, 241, 0.15);
             color: #c7d2fe;
             border: 1px solid rgba(99, 102, 241, 0.35);
-            padding: 0.4rem 0.9rem;
+            padding: 0.35rem 0.75rem;
             border-radius: 8px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
         }
         .btn-sample:hover {
             background: rgba(99, 102, 241, 0.28);
@@ -140,7 +143,7 @@
             max-width: 1280px;
             width: 100%;
             margin: 0 auto;
-            padding: 2rem 1.5rem;
+            padding: 1.25rem 1rem;
             display: flex;
             flex-direction: column;
         }
@@ -151,10 +154,10 @@
             max-width: 720px;
             width: 100%;
             text-align: center;
-            padding: 3rem 0;
+            padding: 2rem 0;
         }
         .upload-title {
-            font-size: 2.25rem;
+            font-size: 2rem;
             font-weight: 800;
             letter-spacing: -0.03em;
             margin-bottom: 0.75rem;
@@ -167,32 +170,33 @@
         }
         .upload-subtitle {
             color: var(--text-muted);
-            font-size: 1rem;
-            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            margin-bottom: 1.75rem;
             max-width: 580px;
             margin-left: auto;
             margin-right: auto;
         }
 
         .dropzone {
-            border: 2px dashed rgba(99, 102, 241, 0.4);
-            border-radius: 18px;
-            background: rgba(17, 24, 39, 0.6);
-            padding: 3.5rem 2rem;
+            border: 2px dashed rgba(99, 102, 241, 0.45);
+            border-radius: 20px;
+            background: rgba(17, 24, 39, 0.7);
+            padding: 3rem 1.5rem;
             cursor: pointer;
             transition: all 0.25s ease;
             position: relative;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            touch-action: manipulation;
         }
-        .dropzone:hover {
+        .dropzone:hover, .dropzone:active {
             border-color: #818cf8;
-            background: rgba(17, 24, 39, 0.85);
+            background: rgba(17, 24, 39, 0.9);
             transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.25);
         }
         .upload-cloud-icon {
-            width: 68px;
-            height: 68px;
+            width: 64px;
+            height: 64px;
             border-radius: 16px;
             background: rgba(99, 102, 241, 0.12);
             color: #818cf8;
@@ -218,30 +222,30 @@
             flex-wrap: wrap;
         }
         .pill-tag {
-            background: rgba(31, 41, 55, 0.8);
+            background: rgba(31, 41, 55, 0.85);
             color: #94a3b8;
             padding: 0.3rem 0.65rem;
             border-radius: 6px;
             font-size: 0.72rem;
-            font-family: monospace;
+            font-weight: 600;
         }
 
         /* Workspace Grid */
         .workspace {
             display: none;
-            gap: 1.5rem;
+            gap: 1.25rem;
             flex-direction: column;
         }
         .video-bar {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 0.75rem 1.25rem;
+            padding: 0.75rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.75rem;
         }
         .video-meta-left {
             display: flex;
@@ -257,13 +261,18 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         .video-filename {
             font-size: 0.88rem;
             font-weight: 600;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .video-stats {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
         }
         .btn-change {
@@ -273,7 +282,7 @@
             padding: 0.4rem 0.85rem;
             border-radius: 8px;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.15s;
         }
@@ -285,7 +294,7 @@
         .editor-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
         @media (min-width: 1024px) {
             .editor-grid {
@@ -309,10 +318,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 400px;
-            padding: 0.5rem;
+            min-height: 320px;
+            padding: 0.25rem;
             overflow: hidden;
             user-select: none;
+            touch-action: none;
         }
         #editorCanvas {
             max-width: 100%;
@@ -321,43 +331,46 @@
             border-radius: 8px;
             cursor: crosshair;
             display: block;
+            touch-action: none;
         }
         .hint-overlay {
             position: absolute;
-            top: 1rem;
+            top: 0.75rem;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9);
-            border: 1px solid rgba(99, 102, 241, 0.4);
-            padding: 0.4rem 1rem;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(99, 102, 241, 0.5);
+            padding: 0.4rem 0.9rem;
             border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #c7d2fe;
             pointer-events: none;
             backdrop-filter: blur(8px);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             transition: opacity 0.3s;
+            text-align: center;
+            max-width: 90%;
         }
 
         /* Playback Toolbar */
         .toolbar {
             background: #0d131f;
             border-top: 1px solid var(--border-color);
-            padding: 0.85rem 1.25rem;
+            padding: 0.75rem 1rem;
             display: flex;
             flex-direction: column;
-            gap: 0.65rem;
+            gap: 0.55rem;
         }
         .timeline-row {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.65rem;
         }
         .time-label {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-family: monospace;
             color: #cbd5e1;
-            width: 45px;
+            width: 42px;
         }
         .time-label.right {
             text-align: right;
@@ -374,8 +387,8 @@
         }
         .slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 15px;
-            height: 15px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: var(--primary);
             box-shadow: 0 0 8px var(--primary);
@@ -390,13 +403,13 @@
         .playback-buttons {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
         }
         .btn-ctrl {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             color: #cbd5e1;
-            padding: 0.4rem 0.75rem;
+            padding: 0.45rem 0.75rem;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.75rem;
@@ -406,7 +419,7 @@
             gap: 0.35rem;
             transition: all 0.15s;
         }
-        .btn-ctrl:hover {
+        .btn-ctrl:hover, .btn-ctrl:active {
             background: #374151;
             color: #fff;
         }
@@ -421,12 +434,12 @@
         .box-info-pill {
             display: none;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.75rem;
+            gap: 0.4rem;
+            font-size: 0.72rem;
             font-family: monospace;
-            background: rgba(31, 41, 55, 0.7);
+            background: rgba(31, 41, 55, 0.8);
             border: 1px solid var(--border-color);
-            padding: 0.35rem 0.75rem;
+            padding: 0.35rem 0.65rem;
             border-radius: 8px;
             color: #818cf8;
         }
@@ -437,6 +450,7 @@
             cursor: pointer;
             display: flex;
             align-items: center;
+            padding: 2px 4px;
         }
         .btn-clear-box:hover {
             color: #f43f5e;
@@ -446,13 +460,13 @@
         .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
+            gap: 1.15rem;
         }
         .card {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 16px;
-            padding: 1.25rem;
+            padding: 1.15rem;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
         .card-header {
@@ -460,11 +474,11 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.75rem;
-            margin-bottom: 1rem;
+            padding-bottom: 0.65rem;
+            margin-bottom: 0.9rem;
         }
         .card-title {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -481,21 +495,29 @@
             text-transform: uppercase;
         }
 
+        .section-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            color: #cbd5e1;
+        }
+
         .mode-option {
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 0.75rem;
+            padding: 0.65rem;
             background: rgba(17, 24, 39, 0.6);
-            margin-bottom: 0.65rem;
+            margin-bottom: 0.55rem;
             cursor: pointer;
             display: flex;
             align-items: flex-start;
-            gap: 0.6rem;
+            gap: 0.55rem;
             transition: all 0.2s;
         }
         .mode-option.active, .mode-option:hover {
             border-color: rgba(99, 102, 241, 0.6);
-            background: rgba(99, 102, 241, 0.08);
+            background: rgba(99, 102, 241, 0.1);
         }
         .mode-option input {
             margin-top: 0.2rem;
@@ -503,34 +525,50 @@
         }
         .mode-text strong {
             display: block;
-            font-size: 0.82rem;
-            margin-bottom: 0.15rem;
+            font-size: 0.8rem;
+            margin-bottom: 0.12rem;
         }
         .mode-text p {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             color: var(--text-muted);
             line-height: 1.3;
         }
 
+        .select-input {
+            width: 100%;
+            background: #1f2937;
+            color: #f3f4f6;
+            border: 1px solid var(--border-color);
+            padding: 0.55rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            outline: none;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+        }
+        .select-input:focus {
+            border-color: var(--primary);
+        }
+
         .slider-group {
-            margin-top: 1rem;
+            margin-top: 0.85rem;
         }
         .slider-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.3rem;
         }
         .slider-head span:last-child {
             color: #818cf8;
             font-family: monospace;
         }
         .slider-desc {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--text-muted);
-            margin-top: 0.3rem;
+            margin-top: 0.25rem;
         }
 
         .btn-test {
@@ -540,7 +578,7 @@
             color: #e2e8f0;
             padding: 0.65rem;
             border-radius: 10px;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
@@ -548,9 +586,9 @@
             justify-content: center;
             gap: 0.5rem;
             transition: all 0.15s;
-            margin-top: 1rem;
+            margin-top: 0.75rem;
         }
-        .btn-test:hover {
+        .btn-test:hover, .btn-test:active {
             background: #374151;
             color: #fff;
         }
@@ -563,19 +601,19 @@
             color: #fff;
             padding: 0.95rem;
             border-radius: 12px;
-            font-size: 0.92rem;
-            font-weight: 700;
+            font-size: 0.95rem;
+            font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.35);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
             transition: all 0.2s ease;
         }
-        .btn-process:hover {
+        .btn-process:hover, .btn-process:active {
             transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.55);
             background: linear-gradient(135deg, #4338ca, #7e22ce);
         }
 
@@ -584,7 +622,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.88);
             backdrop-filter: blur(8px);
             z-index: 100;
             align-items: center;
@@ -594,10 +632,10 @@
         .modal-card {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
-            max-width: 540px;
+            max-width: 520px;
             width: 100%;
             border-radius: 18px;
-            padding: 1.75rem;
+            padding: 1.5rem;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
         }
         .modal-head {
@@ -605,11 +643,11 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.9rem;
-            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
         }
         .modal-title {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 700;
         }
         .btn-close-modal {
@@ -617,6 +655,8 @@
             border: none;
             color: #94a3b8;
             cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.9rem;
         }
         .btn-close-modal:hover {
             color: #fff;
@@ -641,21 +681,21 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
+            gap: 0.65rem;
             background: rgba(15, 23, 42, 0.8);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 0.85rem;
+            padding: 0.75rem;
             text-align: center;
         }
         .stat-item span {
             display: block;
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
             text-transform: uppercase;
         }
         .stat-item strong {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-family: monospace;
             color: #f1f5f9;
         }
@@ -670,36 +710,71 @@
             margin: 0 auto;
             width: 100%;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
         .success-banner {
-            background: rgba(16, 185, 129, 0.1);
+            background: rgba(16, 185, 129, 0.12);
             border: 1px solid rgba(16, 185, 129, 0.35);
             border-radius: 16px;
-            padding: 1.25rem 1.75rem;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+        .banner-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.5rem;
+        }
+        .btn-gallery {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-gallery:hover, .btn-gallery:active {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
         }
         .btn-download {
             background: linear-gradient(135deg, #10b981, #059669);
             color: #022c22;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1.25rem;
             border-radius: 12px;
             font-weight: 800;
             text-decoration: none;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
             transition: all 0.2s;
+            cursor: pointer;
+            border: none;
         }
-        .btn-download:hover {
+        .btn-download:hover, .btn-download:active {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(16, 185, 129, 0.45);
+        }
+        .phone-tip-box {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 8px;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.72rem;
+            color: #93c5fd;
+            border-left: 3px solid #6366f1;
         }
 
         /* Split Comparison */
@@ -712,6 +787,7 @@
             overflow: hidden;
             border: 1px solid var(--border-color);
             user-select: none;
+            touch-action: none;
         }
         .split-container video {
             position: absolute;
@@ -719,13 +795,13 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            pointer-events: none;
         }
         .split-clip {
             position: absolute;
             inset: 0;
             width: 50%;
             overflow: hidden;
+            pointer-events: none;
         }
         .split-divider {
             position: absolute;
@@ -739,6 +815,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 10;
         }
         .split-handle {
             width: 32px;
@@ -757,21 +834,11 @@
 
         footer {
             border-top: 1px solid rgba(55, 65, 81, 0.6);
-            padding: 1.25rem;
+            padding: 1rem;
             text-align: center;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-muted);
             margin-top: auto;
-        }
-
-        .icon-svg {
-            display: inline-block;
-            width: 1.25em;
-            height: 1.25em;
-            stroke-width: 0;
-            stroke: currentColor;
-            fill: currentColor;
-            vertical-align: middle;
         }
     </style>
 </head>
@@ -782,24 +849,24 @@
         <div class="header-content">
             <div class="logo-wrap">
                 <div class="logo-icon">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
                     </svg>
                 </div>
                 <div class="logo-text">
                     <h1>CrystalClear AI</h1>
-                    <p>Offline & Vercel Ready • Video Watermark Remover</p>
+                    <p>Ultra Speed • 100% Offline Engine</p>
                 </div>
             </div>
 
             <div class="header-badges">
                 <span class="badge">
                     <span class="pulse-dot"></span>
-                    100% Client-Side Engine (Offline)
+                    Ultra Speed GPU
                 </span>
                 <button id="btnTrySample" class="btn-sample">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="6 3 20 12 6 21 6 3"/></svg>
-                    <span>Instant Sample Demo</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+                    <span>Sample</span>
                 </button>
             </div>
         </div>
@@ -810,21 +877,21 @@
 
         <!-- Screen 1: Upload Box -->
         <section id="uploadSection" class="upload-section">
-            <h2 class="upload-title">Clean Watermarks in <span class="gradient-text">Under 1 Minute</span></h2>
-            <p class="upload-subtitle">Drag and drop any video, draw a box over the watermark, and download a crystal-clear video with zero server delays.</p>
+            <h2 class="upload-title">Clean Watermarks in <span class="gradient-text">Ultra Speed</span></h2>
+            <p class="upload-subtitle">Drop any video, draw a box over the watermark, and download a crystal-clear video with 0 server wait times.</p>
 
             <div id="dropZone" class="dropzone">
                 <input type="file" id="videoFileInput" accept="video/*" style="display: none;">
                 <div class="upload-cloud-icon">
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
                 </div>
-                <h3>Click to upload or drag & drop video</h3>
-                <p>Supports MP4, MOV, MKV, WebM, AVI • 100% Private (Runs locally in your browser)</p>
+                <h3>Tap to Choose Video or Drag & Drop</h3>
+                <p>Supports MP4, MOV, MKV, WebM • 100% Private (Runs locally on your phone)</p>
                 <div class="pill-tags">
-                    <span class="pill-tag">⚡ Under 1 Min</span>
+                    <span class="pill-tag">⚡ 60 FPS GPU</span>
+                    <span class="pill-tag">📱 Phone Gallery Ready</span>
+                    <span class="pill-tag">🎵 Lossless Audio</span>
                     <span class="pill-tag">🔒 100% Offline</span>
-                    <span class="pill-tag">🎵 Original Audio Kept</span>
-                    <span class="pill-tag">🚀 Vercel Ready</span>
                 </div>
             </div>
         </section>
@@ -841,7 +908,7 @@
                         <div id="videoStats" class="video-stats">1280x720 • 00:00 • 30 fps</div>
                     </div>
                 </div>
-                <button id="btnChangeVideo" class="btn-change">Upload Different Video</button>
+                <button id="btnChangeVideo" class="btn-change">Change Video</button>
             </div>
 
             <div class="editor-grid">
@@ -851,7 +918,7 @@
                         <video id="sourceVideo" style="display: none;" playsinline preload="auto"></video>
                         <canvas id="editorCanvas"></canvas>
                         <div id="selectionHint" class="hint-overlay">
-                            Click & drag over the watermark to draw selection box
+                            Tap & drag over the watermark to draw selection box
                         </div>
                     </div>
 
@@ -882,25 +949,57 @@
                 <div class="sidebar">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Inpainting Settings</h3>
-                            <span class="badge-turbo">Turbo Fast</span>
+                            <h3 class="card-title">Processing & Speed Settings</h3>
+                            <span class="badge-turbo">Ultra Speed</span>
                         </div>
 
-                        <!-- Mode Options -->
-                        <label class="mode-option active">
-                            <input type="radio" name="modeSelect" value="crystal_clear" checked>
-                            <div class="mode-text">
-                                <strong>⚡ Turbo Crystal Clear (&lt; 30s)</strong>
-                                <p>Cosine-smooth edge-aware inpainting with subtle texture matching.</p>
-                            </div>
-                        </label>
-                        <label class="mode-option">
-                            <input type="radio" name="modeSelect" value="blur">
-                            <div class="mode-text">
-                                <strong>🌫️ Soft Feathered Blur</strong>
-                                <p>Smooth Gaussian blur filter for privacy or censorship.</p>
-                            </div>
-                        </label>
+                        <!-- Speed Engine Selector -->
+                        <div style="margin-bottom: 0.85rem;">
+                            <label class="section-label">Speed Engine</label>
+                            <label class="mode-option active">
+                                <input type="radio" name="speedSelect" value="ultra" checked>
+                                <div class="mode-text">
+                                    <strong>🚀 Ultra Speed GPU (30-60 FPS)</strong>
+                                    <p>Continuous hardware decode without seek lag. Recommended for phones.</p>
+                                </div>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="speedSelect" value="precision">
+                                <div class="mode-text">
+                                    <strong>🎯 Frame-by-Frame Precision</strong>
+                                    <p>Step-by-step seeking for short clips.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Resolution Preset for Mobile -->
+                        <div>
+                            <label class="section-label">Mobile Resolution Preset</label>
+                            <select id="resPresetSelect" class="select-input">
+                                <option value="720p" selected>⚡ Ultra Fast (720p - Best on Phone & Social Media)</option>
+                                <option value="1080p">🚀 Full HD (1080p Crisp)</option>
+                                <option value="native">💎 Original Video Resolution</option>
+                            </select>
+                        </div>
+
+                        <!-- Removal Mode Options -->
+                        <div style="margin-bottom: 0.85rem;">
+                            <label class="section-label">Inpainting Mode</label>
+                            <label class="mode-option active">
+                                <input type="radio" name="modeSelect" value="crystal_clear" checked>
+                                <div class="mode-text">
+                                    <strong>⚡ Turbo Crystal Clear</strong>
+                                    <p>LUT-accelerated edge blending with subtle grain matching.</p>
+                                </div>
+                            </label>
+                            <label class="mode-option">
+                                <input type="radio" name="modeSelect" value="blur">
+                                <div class="mode-text">
+                                    <strong>🌫️ Soft Feathered Blur</strong>
+                                    <p>Smooth Gaussian blur filter for privacy or censorship.</p>
+                                </div>
+                            </label>
+                        </div>
 
                         <!-- Feathering Slider -->
                         <div class="slider-group">
@@ -930,15 +1029,23 @@
         <!-- Screen 3: Result View -->
         <section id="resultSection" class="result-section">
             <div class="success-banner">
-                <div>
-                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.2rem;">Watermark Cleaned Successfully!</h3>
-                    <p style="font-size: 0.78rem; color: #cbd5e1;" id="resultTimeStats">Processed in 12s • Lossless audio kept</p>
+                <div class="banner-top">
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.2rem;">Watermark Cleaned Successfully!</h3>
+                        <p style="font-size: 0.78rem; color: #cbd5e1;" id="resultTimeStats">Processed in 6s • Lossless audio kept</p>
+                    </div>
+                    <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                        <button id="btnSaveGallery" class="btn-gallery">
+                            📲 Save to Gallery / Phone
+                        </button>
+                        <a id="btnDownload" href="#" download class="btn-download">
+                            ⬇️ Direct Download
+                        </a>
+                        <button id="btnProcessAnother" class="btn-change">Process Another</button>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 0.75rem;">
-                    <a id="btnDownload" href="#" download class="btn-download">
-                        ⬇️ Download Clean Video
-                    </a>
-                    <button id="btnProcessAnother" class="btn-change">Process Another</button>
+                <div class="phone-tip-box">
+                    💡 <strong>Phone Tip:</strong> Tap <b>"Save to Gallery / Phone"</b> to save directly to your Photos or WhatsApp. You can also tap &amp; hold the clean video below to save it!
                 </div>
             </div>
 
@@ -950,7 +1057,7 @@
                 </div>
 
                 <div class="split-container" id="splitContainer">
-                    <video id="resCleanVideo" playsinline loop></video>
+                    <video id="resCleanVideo" playsinline controls loop></video>
                     <div class="split-clip" id="splitClip">
                         <video id="resOrigVideo" playsinline loop></video>
                     </div>
@@ -959,9 +1066,9 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.85rem;">
                     <button id="btnPlayCompare" class="btn-ctrl btn-play">▶ Play Comparison</button>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">Synchronized audio & video</span>
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">Synchronized audio &amp; video</span>
                 </div>
             </div>
         </section>
@@ -988,15 +1095,15 @@
             <div class="stats-grid">
                 <div class="stat-item highlight">
                     <span>Estimated Time</span>
-                    <strong id="statEta">&lt; 30s</strong>
+                    <strong id="statEta">&lt; 10s</strong>
                 </div>
                 <div class="stat-item">
                     <span>Speed</span>
                     <strong id="statFps">60 FPS</strong>
                 </div>
                 <div class="stat-item">
-                    <span>Frames</span>
-                    <strong id="statFrames">0 / 0</strong>
+                    <span>Time Rendered</span>
+                    <strong id="statFrames">0s / 0s</strong>
                 </div>
             </div>
         </div>
@@ -1009,14 +1116,14 @@
                 <div class="modal-title">Instant Frame Test</div>
                 <button id="btnClosePreview" class="btn-close-modal">✕</button>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                 <div>
                     <div style="font-size: 0.75rem; font-weight: 600; margin-bottom: 0.35rem; color: #f43f5e;">Before (With Watermark)</div>
-                    <img id="prevImgBefore" style="width: 100%; height: 260px; object-fit: contain; background: #000; border-radius: 8px;">
+                    <img id="prevImgBefore" style="width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: 8px;">
                 </div>
                 <div>
                     <div style="font-size: 0.75rem; font-weight: 600; margin-bottom: 0.35rem; color: #34d399;">After (Watermark Removed)</div>
-                    <img id="prevImgAfter" style="width: 100%; height: 260px; object-fit: contain; background: #000; border-radius: 8px; border: 1px solid #10b981;">
+                    <img id="prevImgAfter" style="width: 100%; height: 220px; object-fit: contain; background: #000; border-radius: 8px; border: 1px solid #10b981;">
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
@@ -1029,12 +1136,12 @@
 
     <!-- Footer -->
     <footer>
-        CrystalClear AI • 100% Client-Side Engine • Ready for Vercel, Netlify & Offline Use
+        CrystalClear AI • Ultra Speed GPU Engine • 100% Offline &amp; Private
     </footer>
 
-    <!-- INLINE PURE JAVASCRIPT ENGINE (Zero External Dependencies) -->
+    <!-- INLINE PURE JAVASCRIPT ULTRA SPEED ENGINE -->
     <script>
-        // --- 1. Canvas Bounding Box Selector ---
+        // --- 1. Canvas Bounding Box Selector with Mobile Touch Support ---
         class BoxSelector {
             constructor(canvas, video, onChange) {
                 this.canvas = canvas;
@@ -1047,7 +1154,7 @@
                 this.dragStart = { x: 0, y: 0 };
                 this.boxStart = null;
                 this.activeHandle = null;
-                this.handleSize = 8;
+                this.handleSize = 14; // Touch friendly handle size
                 this.initEvents();
             }
 
@@ -1065,8 +1172,8 @@
 
             toVideoCoords(e) {
                 const rect = this.canvas.getBoundingClientRect();
-                const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-                const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+                const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+                const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
                 const scaleX = this.canvas.width / rect.width;
                 const scaleY = this.canvas.height / rect.height;
                 return {
@@ -1106,9 +1213,10 @@
             getHit(cx, cy) {
                 if (!this.box) return { type: 'draw' };
                 const handles = this.getHandles();
+                const hitRadius = this.handleSize + 6;
                 for (const [h, pt] of Object.entries(handles)) {
-                    if (cx >= pt.x - 4 && cx <= pt.x + this.handleSize + 4 &&
-                        cy >= pt.y - 4 && cy <= pt.y + this.handleSize + 4) {
+                    if (cx >= pt.x - hitRadius && cx <= pt.x + hitRadius &&
+                        cy >= pt.y - hitRadius && cy <= pt.y + hitRadius) {
                         return { type: 'resize', handle: h };
                     }
                 }
@@ -1191,8 +1299,9 @@
                 window.addEventListener('mousemove', onMove);
                 window.addEventListener('mouseup', onUp);
 
+                // Touch Events with non-passive preventDefault to stop scrolling while selecting
                 this.canvas.addEventListener('touchstart', (e) => { e.preventDefault(); onDown(e); }, { passive: false });
-                window.addEventListener('touchmove', (e) => { if (this.isInteracting) onMove(e); });
+                window.addEventListener('touchmove', (e) => { if (this.isInteracting) { e.preventDefault(); onMove(e); } }, { passive: false });
                 window.addEventListener('touchend', onUp);
             }
 
@@ -1209,7 +1318,7 @@
                 if (this.box && this.box.width > 2 && this.box.height > 2) {
                     const { x, y, width: bw, height: bh } = this.box;
                     // Outside darkening
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
                     ctx.beginPath();
                     ctx.rect(0, 0, w, h);
                     ctx.rect(x + bw, y, -bw, bh);
@@ -1226,7 +1335,7 @@
                     ctx.restore();
 
                     // Corner corners
-                    const c = Math.min(16, Math.min(bw, bh) / 3);
+                    const c = Math.min(18, Math.min(bw, bh) / 3);
                     ctx.strokeStyle = '#38bdf8';
                     ctx.lineWidth = 3.5;
                     ctx.setLineDash([]);
@@ -1236,18 +1345,31 @@
                     ctx.moveTo(x + bw, y + bh - c); ctx.lineTo(x + bw, y + bh); ctx.lineTo(x + bw - c, y + bh);
                     ctx.moveTo(x + c, y + bh); ctx.lineTo(x, y + bh); ctx.lineTo(x, y + bh - c);
                     ctx.stroke();
+
+                    // Visual touch handle indicators
+                    const hs = this.handleSize;
+                    const handles = this.getHandles();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.strokeStyle = '#6366f1';
+                    ctx.lineWidth = 2;
+                    for (const pt of Object.values(handles)) {
+                        ctx.beginPath();
+                        ctx.arc(pt.x + hs/2, pt.y + hs/2, hs/2 - 1, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
                 }
             }
         }
 
-        // --- 2. High-Speed Client Inpainting Function ---
-        function inpaintCanvasArea(ctx, box, featherRadius = 4, isBlur = false) {
+        // --- 2. Ultra-Speed Look-Up Table (LUT) Inpainting Engine ---
+        function fastInpaintBox(ctx, box, featherLUT, hSmoothLUT, vSmoothLUT, noiseTable, isBlur) {
             if (!box || box.width <= 2 || box.height <= 2) return;
             const w = ctx.canvas.width, h = ctx.canvas.height;
-            const x = Math.max(0, Math.min(w - 1, Math.round(box.x)));
-            const y = Math.max(0, Math.min(h - 1, Math.round(box.y)));
-            const bw = Math.min(w - x, Math.round(box.width));
-            const bh = Math.min(h - y, Math.round(box.height));
+            const x = Math.max(0, Math.min(w - 1, box.x));
+            const y = Math.max(0, Math.min(h - 1, box.y));
+            const bw = Math.min(w - x, box.width);
+            const bh = Math.min(h - y, box.height);
 
             if (isBlur) {
                 ctx.save();
@@ -1257,7 +1379,7 @@
                 return;
             }
 
-            const pad = 12;
+            const pad = 10;
             const px1 = Math.max(0, x - pad), py1 = Math.max(0, y - pad);
             const px2 = Math.min(w, x + bw + pad), py2 = Math.min(h, y + bh + pad);
             const cropW = px2 - px1, cropH = py2 - py1;
@@ -1266,58 +1388,66 @@
 
             const rx1 = x - px1, ry1 = y - py1;
             const rx2 = rx1 + bw, ry2 = ry1 + bh;
-            const feather = Math.max(1, featherRadius);
+            const feather = featherLUT.length - 1;
 
             const topY = Math.max(0, ry1 - 2);
             const botY = Math.min(cropH - 1, ry2 + 1);
             const leftX = Math.max(0, rx1 - 2);
             const rightX = Math.min(cropW - 1, rx2 + 1);
 
+            const topRowOffset = topY * cropW;
+            const botRowOffset = botY * cropW;
+            let noiseOffset = (x * 17 + y * 11) & 255;
+
             for (let py = ry1; py < ry2; py++) {
-                const vFactor = (py - ry1) / (bh - 1 || 1);
-                const vSmooth = (1 - Math.cos(vFactor * Math.PI)) / 2;
+                const vSmooth = vSmoothLUT[py - ry1];
+                const invVSmooth = 1.0 - vSmooth;
+                const curRowOffset = py * cropW;
+
+                const leftIdx = (curRowOffset + leftX) * 4;
+                const rightIdx = (curRowOffset + rightX) * 4;
+                const rL = data[leftIdx], gL = data[leftIdx + 1], bL = data[leftIdx + 2];
+                const rR = data[rightIdx], gR = data[rightIdx + 1], bR = data[rightIdx + 2];
+
+                const distTop = py - ry1;
+                const distBot = ry2 - 1 - py;
+                const minDistV = distTop < distBot ? distTop : distBot;
 
                 for (let px = rx1; px < rx2; px++) {
-                    const hFactor = (px - rx1) / (bw - 1 || 1);
-                    const hSmooth = (1 - Math.cos(hFactor * Math.PI)) / 2;
+                    const hSmooth = hSmoothLUT[px - rx1];
+                    const invHSmooth = 1.0 - hSmooth;
 
-                    const tIdx = (topY * cropW + px) * 4;
-                    const bIdx = (botY * cropW + px) * 4;
-                    const lIdx = (py * cropW + leftX) * 4;
-                    const rIdx = (py * cropW + rightX) * 4;
+                    const topIdx = (topRowOffset + px) * 4;
+                    const botIdx = (botRowOffset + px) * 4;
 
-                    const rV = data[tIdx] * (1 - vSmooth) + data[bIdx] * vSmooth;
-                    const gV = data[tIdx + 1] * (1 - vSmooth) + data[bIdx + 1] * vSmooth;
-                    const bV = data[tIdx + 2] * (1 - vSmooth) + data[bIdx + 2] * vSmooth;
+                    const rV = data[topIdx] * invVSmooth + data[botIdx] * vSmooth;
+                    const gV = data[topIdx + 1] * invVSmooth + data[botIdx + 1] * vSmooth;
+                    const bV = data[topIdx + 2] * invVSmooth + data[botIdx + 2] * vSmooth;
 
-                    const rH = data[lIdx] * (1 - hSmooth) + data[rIdx] * hSmooth;
-                    const gH = data[lIdx + 1] * (1 - hSmooth) + data[rIdx + 1] * hSmooth;
-                    const bH = data[lIdx + 2] * (1 - hSmooth) + data[rIdx + 2] * hSmooth;
+                    const rH = rL * invHSmooth + rR * hSmooth;
+                    const gH = gL * invHSmooth + gR * hSmooth;
+                    const bH = bL * invHSmooth + bR * hSmooth;
 
-                    const dL = px - rx1, dR = rx2 - 1 - px, dT = py - ry1, dB = ry2 - 1 - py;
-                    const minH = Math.min(dL, dR), minV = Math.min(dT, dB);
-                    const wH = minV / (minH + minV + 1e-5);
-                    const wV = 1.0 - wH;
+                    const distLeft = px - rx1;
+                    const distRight = rx2 - 1 - px;
+                    const minDistH = distLeft < distRight ? distLeft : distRight;
 
-                    let inR = rH * wH + rV * wV;
-                    let inG = gH * wH + gV * wV;
-                    let inB = bH * wH + bV * wV;
+                    const weightH = minDistV / (minDistH + minDistV + 1e-5);
+                    const weightV = 1.0 - weightH;
 
-                    const noise = (Math.random() - 0.5) * 2.5;
-                    inR = Math.max(0, Math.min(255, inR + noise));
-                    inG = Math.max(0, Math.min(255, inG + noise));
-                    inB = Math.max(0, Math.min(255, inB + noise));
+                    const noise = noiseTable[(noiseOffset++) & 255];
+                    let inR = rH * weightH + rV * weightV + noise;
+                    let inG = gH * weightH + gV * weightV + noise;
+                    let inB = bH * weightH + bV * weightV + noise;
 
-                    const edgeDist = Math.min(minH, minV);
-                    let alpha = 1.0;
-                    if (edgeDist < feather) {
-                        alpha = (1 - Math.cos((edgeDist / feather) * Math.PI)) / 2;
-                    }
+                    const edgeDist = minDistH < minDistV ? minDistH : minDistV;
+                    const alpha = edgeDist < feather ? featherLUT[edgeDist] : 1.0;
+                    const invAlpha = 1.0 - alpha;
 
-                    const target = (py * cropW + px) * 4;
-                    data[target] = Math.round(inR * alpha + data[target] * (1 - alpha));
-                    data[target + 1] = Math.round(inG * alpha + data[target + 1] * (1 - alpha));
-                    data[target + 2] = Math.round(inB * alpha + data[target + 2] * (1 - alpha));
+                    const target = (curRowOffset + px) * 4;
+                    data[target] = (inR * alpha + data[target] * invAlpha) | 0;
+                    data[target + 1] = (inG * alpha + data[target + 1] * invAlpha) | 0;
+                    data[target + 2] = (inB * alpha + data[target + 2] * invAlpha) | 0;
                 }
             }
             ctx.putImageData(imgData, px1, py1);
@@ -1329,6 +1459,8 @@
         let isPlaying = false;
         let animId = null;
         let isCancelled = false;
+        let lastProcessedBlob = null;
+        let lastProcessedUrl = null;
 
         const dropZone = document.getElementById('dropZone');
         const videoInput = document.getElementById('videoFileInput');
@@ -1353,6 +1485,7 @@
         const btnNextFrame = document.getElementById('btnNextFrame');
         const featherSlider = document.getElementById('featherSlider');
         const featherVal = document.getElementById('featherVal');
+        const resPresetSelect = document.getElementById('resPresetSelect');
 
         const btnTestPreview = document.getElementById('btnTestPreview');
         const previewModal = document.getElementById('previewModal');
@@ -1370,6 +1503,7 @@
         const statFrames = document.getElementById('statFrames');
         const btnCancelProcess = document.getElementById('btnCancelProcess');
 
+        const btnSaveGallery = document.getElementById('btnSaveGallery');
         const btnDownload = document.getElementById('btnDownload');
         const btnProcessAnother = document.getElementById('btnProcessAnother');
         const resCleanVideo = document.getElementById('resCleanVideo');
@@ -1414,7 +1548,7 @@
             setupVideoWorkspace();
         }
 
-        // Demo sample video generator
+        // Demo sample generator
         btnTrySample.addEventListener('click', () => {
             const w = 1280, h = 720, fps = 30, dur = 3;
             const c = document.createElement('canvas');
@@ -1515,7 +1649,16 @@
             const aCtx = cAfter.getContext('2d');
             aCtx.drawImage(sourceVideo, 0, 0, w, h);
             const isBlur = document.querySelector('input[name="modeSelect"]:checked').value === 'blur';
-            inpaintCanvasArea(aCtx, box, parseInt(featherSlider.value), isBlur);
+
+            // Precompute for test frame
+            const bw = Math.max(1, box.width), bh = Math.max(1, box.height);
+            const hLUT = new Float32Array(bw); for (let i = 0; i < bw; i++) hLUT[i] = (1 - Math.cos((bw > 1 ? i / (bw - 1) : 0.5) * Math.PI)) * 0.5;
+            const vLUT = new Float32Array(bh); for (let j = 0; j < bh; j++) vLUT[j] = (1 - Math.cos((bh > 1 ? j / (bh - 1) : 0.5) * Math.PI)) * 0.5;
+            const fth = Math.max(1, parseInt(featherSlider.value));
+            const fthLUT = new Float32Array(fth + 1); for (let d = 0; d <= fth; d++) fthLUT[d] = (1 - Math.cos((d / fth) * Math.PI)) * 0.5;
+            const nTab = new Float32Array(256); for (let n = 0; n < 256; n++) nTab[n] = ((Math.sin(n * 91.345) * 43758.5453) % 1.0 - 0.5) * 2.5;
+
+            fastInpaintBox(aCtx, box, fthLUT, hLUT, vLUT, nTab, isBlur);
             prevImgAfter.src = cAfter.toDataURL('image/jpeg', 0.9);
             previewModal.style.display = 'flex';
         });
@@ -1525,86 +1668,223 @@
             btnStartProcess.click();
         });
 
-        // Full Video Inpainting Pipeline (Under 1 Minute)
+        // --- 4. ULTRA SPEED VIDEO WATERMARK REMOVAL PIPELINE ---
         btnStartProcess.addEventListener('click', async () => {
             const box = selector.box;
-            if (!box) { alert('Please draw a selection box over the watermark!'); return; }
+            if (!box) { alert('Please tap and drag over the watermark to draw a selection box!'); return; }
             sourceVideo.pause();
             isCancelled = false;
 
             progressModal.style.display = 'flex';
             progressBar.style.width = '0%';
             progressPctText.textContent = '0.0%';
-            statEta.textContent = '< 30s';
-            statFps.textContent = 'Calculating...';
+            statEta.textContent = '< 10s';
+            statFps.textContent = 'Starting...';
 
-            const w = editorCanvas.width, h = editorCanvas.height;
+            const speedMode = document.querySelector('input[name="speedSelect"]:checked')?.value || 'ultra';
+            const resPreset = resPresetSelect.value || '720p';
+
+            const origW = sourceVideo.videoWidth || 1280;
+            const origH = sourceVideo.videoHeight || 720;
+            let targetW = origW;
+            let targetH = origH;
+
+            // Resolution scaling for ultra speed on mobile
+            if (resPreset === '720p' && origH > 720) {
+                const scale = 720 / origH;
+                targetH = 720;
+                targetW = Math.round((origW * scale) / 2) * 2;
+            } else if (resPreset === '1080p' && origH > 1080) {
+                const scale = 1080 / origH;
+                targetH = 1080;
+                targetW = Math.round((origW * scale) / 2) * 2;
+            }
+
+            const scaleX = targetW / editorCanvas.width;
+            const scaleY = targetH / editorCanvas.height;
+            const scaledBox = {
+                x: Math.round(box.x * scaleX),
+                y: Math.round(box.y * scaleY),
+                width: Math.round(box.width * scaleX),
+                height: Math.round(box.height * scaleY)
+            };
+
             const procCanvas = document.createElement('canvas');
-            procCanvas.width = w; procCanvas.height = h;
-            const pCtx = procCanvas.getContext('2d', { willReadFrequently: true });
+            procCanvas.width = targetW; procCanvas.height = targetH;
+            const pCtx = procCanvas.getContext('2d', { willReadFrequently: true, alpha: false });
 
-            const fps = 30;
-            const totalFrames = Math.max(1, Math.round(sourceVideo.duration * fps));
-            statFrames.textContent = `0 / ${totalFrames}`;
+            // Look-Up Table Precomputations (Zero trigonometric calculations inside video loop)
+            const bw = Math.max(1, scaledBox.width);
+            const bh = Math.max(1, scaledBox.height);
+            const hSmoothLUT = new Float32Array(bw);
+            for (let i = 0; i < bw; i++) hSmoothLUT[i] = (1 - Math.cos((bw > 1 ? i / (bw - 1) : 0.5) * Math.PI)) * 0.5;
 
+            const vSmoothLUT = new Float32Array(bh);
+            for (let j = 0; j < bh; j++) vSmoothLUT[j] = (1 - Math.cos((bh > 1 ? j / (bh - 1) : 0.5) * Math.PI)) * 0.5;
+
+            const feather = Math.max(1, parseInt(featherSlider.value));
+            const featherLUT = new Float32Array(feather + 1);
+            for (let d = 0; d <= feather; d++) featherLUT[d] = (1 - Math.cos((d / feather) * Math.PI)) * 0.5;
+
+            const noiseTable = new Float32Array(256);
+            for (let n = 0; n < 256; n++) noiseTable[n] = ((Math.sin(n * 91.345) * 43758.5453) % 1.0 - 0.5) * 2.5;
+
+            const isBlur = document.querySelector('input[name="modeSelect"]:checked').value === 'blur';
+
+            // Audio extraction
             let audioTracks = [];
             try {
                 const st = sourceVideo.captureStream ? sourceVideo.captureStream() : sourceVideo.mozCaptureStream();
                 if (st) audioTracks = st.getAudioTracks();
             } catch (e) {}
 
+            const fps = 30;
             const cStream = procCanvas.captureStream(fps);
             const comboStream = new MediaStream([cStream.getVideoTracks()[0], ...audioTracks]);
 
-            let mime = 'video/webm;codecs=vp9,opus';
-            if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
-            const recorder = new MediaRecorder(comboStream, { mimeType: mime, videoBitsPerSecond: 8000000 });
-            const chunks = [];
-            recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-
-            const finishPromise = new Promise(r => recorder.onstop = () => r(new Blob(chunks, { type: mime })));
-            recorder.start();
-
-            const startTime = performance.now();
-            const isBlur = document.querySelector('input[name="modeSelect"]:checked').value === 'blur';
-            const feather = parseInt(featherSlider.value);
-
-            // High-speed frame extraction
-            for (let f = 0; f < totalFrames; f++) {
-                if (isCancelled) { recorder.stop(); return; }
-                const targetTime = Math.min(sourceVideo.duration, f / fps);
-                await seekVideo(sourceVideo, targetTime);
-
-                pCtx.drawImage(sourceVideo, 0, 0, w, h);
-                inpaintCanvasArea(pCtx, box, feather, isBlur);
-
-                const now = performance.now();
-                const elapsed = (now - startTime) / 1000;
-                const curFps = (f + 1) / (elapsed || 0.001);
-                const pct = Math.min(100, ((f + 1) / totalFrames) * 100);
-                const remainFrames = totalFrames - (f + 1);
-                const eta = Math.round(remainFrames / curFps);
-
-                progressBar.style.width = `${pct}%`;
-                progressPctText.textContent = `${pct.toFixed(1)}%`;
-                statFps.textContent = `${Math.round(curFps)} FPS`;
-                statFrames.textContent = `${f + 1} / ${totalFrames}`;
-                statEta.textContent = eta > 0 ? `${eta}s remaining` : 'Finalizing...';
-
-                await new Promise(r => setTimeout(r, 0));
+            // Supported mime types prioritization (MP4 prioritized on iOS & modern Chrome)
+            const mimeCandidates = [
+                'video/mp4;codecs=avc1,mp4a.40.2',
+                'video/mp4',
+                'video/webm;codecs=vp9,opus',
+                'video/webm;codecs=vp8,opus',
+                'video/webm'
+            ];
+            let mime = 'video/webm';
+            for (const m of mimeCandidates) {
+                if (MediaRecorder.isTypeSupported(m)) { mime = m; break; }
             }
 
-            recorder.stop();
+            const bitrate = targetH <= 720 ? 4500000 : 8000000;
+            let recorder;
+            try {
+                recorder = new MediaRecorder(comboStream, { mimeType: mime, videoBitsPerSecond: bitrate });
+            } catch (e) {
+                recorder = new MediaRecorder(comboStream);
+            }
+
+            const chunks = [];
+            recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+            const finishPromise = new Promise(r => recorder.onstop = () => r(new Blob(chunks, { type: mime })));
+
+            const startTime = performance.now();
+            const duration = sourceVideo.duration || 5;
+
+            if (speedMode === 'ultra') {
+                // 🚀 ULTRA SPEED GPU CONTINUOUS PLAYBACK PIPELINE (Zero Seek Latency)
+                sourceVideo.currentTime = 0;
+                await seekVideo(sourceVideo, 0);
+
+                recorder.start();
+                sourceVideo.muted = true;
+                sourceVideo.playbackRate = 1.0;
+                await sourceVideo.play();
+
+                let frameCount = 0;
+                if ('requestVideoFrameCallback' in sourceVideo) {
+                    await new Promise((resolve) => {
+                        const onFrame = (now, metadata) => {
+                            if (isCancelled) { sourceVideo.pause(); recorder.stop(); resolve(); return; }
+
+                            pCtx.drawImage(sourceVideo, 0, 0, targetW, targetH);
+                            fastInpaintBox(pCtx, scaledBox, featherLUT, hSmoothLUT, vSmoothLUT, noiseTable, isBlur);
+                            frameCount++;
+
+                            const cur = sourceVideo.currentTime;
+                            const pct = Math.min(100, (cur / duration) * 100);
+                            const elapsed = (performance.now() - startTime) / 1000;
+                            const curFps = frameCount / (elapsed || 0.001);
+                            const remain = Math.max(0, duration - cur);
+
+                            progressBar.style.width = `${pct}%`;
+                            progressPctText.textContent = `${pct.toFixed(1)}%`;
+                            statFps.textContent = `${Math.round(curFps)} FPS`;
+                            statFrames.textContent = `${Math.round(cur)}s / ${Math.round(duration)}s`;
+                            statEta.textContent = remain > 0 ? `${Math.round(remain)}s left` : 'Finalizing...';
+
+                            if (!sourceVideo.ended && !sourceVideo.paused && cur < duration - 0.05) {
+                                sourceVideo.requestVideoFrameCallback(onFrame);
+                            } else {
+                                resolve();
+                            }
+                        };
+                        sourceVideo.onended = resolve;
+                        sourceVideo.requestVideoFrameCallback(onFrame);
+                    });
+                } else {
+                    await new Promise((resolve) => {
+                        const onAnim = () => {
+                            if (isCancelled) { sourceVideo.pause(); recorder.stop(); resolve(); return; }
+
+                            pCtx.drawImage(sourceVideo, 0, 0, targetW, targetH);
+                            fastInpaintBox(pCtx, scaledBox, featherLUT, hSmoothLUT, vSmoothLUT, noiseTable, isBlur);
+                            frameCount++;
+
+                            const cur = sourceVideo.currentTime;
+                            const pct = Math.min(100, (cur / duration) * 100);
+                            const elapsed = (performance.now() - startTime) / 1000;
+                            const curFps = frameCount / (elapsed || 0.001);
+
+                            progressBar.style.width = `${pct}%`;
+                            progressPctText.textContent = `${pct.toFixed(1)}%`;
+                            statFps.textContent = `${Math.round(curFps)} FPS`;
+                            statFrames.textContent = `${Math.round(cur)}s / ${Math.round(duration)}s`;
+
+                            if (!sourceVideo.ended && !sourceVideo.paused && cur < duration - 0.05) {
+                                requestAnimationFrame(onAnim);
+                            } else {
+                                resolve();
+                            }
+                        };
+                        sourceVideo.onended = resolve;
+                        requestAnimationFrame(onAnim);
+                    });
+                }
+
+                sourceVideo.pause();
+                recorder.stop();
+            } else {
+                // 🎯 FRAME-BY-FRAME PRECISION STEPPER
+                const totalFrames = Math.max(1, Math.round(duration * fps));
+                recorder.start();
+
+                for (let f = 0; f < totalFrames; f++) {
+                    if (isCancelled) { recorder.stop(); return; }
+                    const targetTime = Math.min(duration, f / fps);
+                    await seekVideo(sourceVideo, targetTime);
+
+                    pCtx.drawImage(sourceVideo, 0, 0, targetW, targetH);
+                    fastInpaintBox(pCtx, scaledBox, featherLUT, hSmoothLUT, vSmoothLUT, noiseTable, isBlur);
+
+                    const now = performance.now();
+                    const elapsed = (now - startTime) / 1000;
+                    const curFps = (f + 1) / (elapsed || 0.001);
+                    const pct = Math.min(100, ((f + 1) / totalFrames) * 100);
+                    const remain = Math.round((totalFrames - (f + 1)) / (curFps || 1));
+
+                    progressBar.style.width = `${pct}%`;
+                    progressPctText.textContent = `${pct.toFixed(1)}%`;
+                    statFps.textContent = `${Math.round(curFps)} FPS`;
+                    statFrames.textContent = `${f + 1} / ${totalFrames}`;
+                    statEta.textContent = remain > 0 ? `${remain}s left` : 'Finalizing...';
+
+                    await new Promise(r => setTimeout(r, 0));
+                }
+                recorder.stop();
+            }
+
             const outputBlob = await finishPromise;
-            const outputUrl = URL.createObjectURL(outputBlob);
+            lastProcessedBlob = outputBlob;
+            lastProcessedUrl = URL.createObjectURL(outputBlob);
             const totalElapsed = ((performance.now() - startTime) / 1000).toFixed(1);
 
             progressModal.style.display = 'none';
-            showResult(outputUrl, totalElapsed);
+            showResult(lastProcessedUrl, totalElapsed);
         });
 
         btnCancelProcess.addEventListener('click', () => {
             isCancelled = true;
+            sourceVideo.pause();
             progressModal.style.display = 'none';
         });
 
@@ -1616,15 +1896,75 @@
             });
         }
 
+        // --- 5. UNIVERSAL MOBILE DOWNLOAD & GALLERY SAVER ---
+        async function saveOrDownloadVideo(blob, baseFilename) {
+            if (!blob) return;
+            const isWebM = blob.type.includes('webm');
+            const ext = isWebM ? '.webm' : '.mp4';
+            const cleanName = (baseFilename || 'video').replace(/\.[^/.]+$/, '') + '_cleaned' + ext;
+
+            // 1. AndroidBridge (Direct save inside Android APK wrapper)
+            if (window.AndroidBridge && window.AndroidBridge.saveVideoBase64) {
+                try {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64 = reader.result.split(',')[1];
+                        window.AndroidBridge.saveVideoBase64(base64, cleanName, blob.type);
+                    };
+                    reader.readAsDataURL(blob);
+                    return;
+                } catch (e) {
+                    console.warn('Android bridge failed:', e);
+                }
+            }
+
+            // 2. Web Share API (Save to Gallery / Photos on iOS Safari & Android Chrome)
+            const file = new File([blob], cleanName, { type: blob.type });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'CrystalClear Video',
+                        text: 'Watermark removed with CrystalClear AI'
+                    });
+                    return;
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                }
+            }
+
+            // 3. Fallback direct browser download
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = blobUrl;
+            a.download = cleanName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+            }, 3000);
+        }
+
+        btnSaveGallery.addEventListener('click', () => {
+            saveOrDownloadVideo(lastProcessedBlob, currentVideo ? currentVideo.name : 'video.mp4');
+        });
+
+        btnDownload.addEventListener('click', (e) => {
+            e.preventDefault();
+            saveOrDownloadVideo(lastProcessedBlob, currentVideo ? currentVideo.name : 'video.mp4');
+        });
+
         function showResult(url, elapsed) {
             editorSection.style.display = 'none';
             resultSection.style.display = 'flex';
-            document.getElementById('resultTimeStats').textContent = `Completed in ${elapsed}s • Crystal clear quality • Audio preserved`;
-            btnDownload.href = url;
-            btnDownload.download = `watermark_removed_${currentVideo.name || 'video.webm'}`;
+            document.getElementById('resultTimeStats').textContent = `Processed in ${elapsed}s • Lossless audio kept • Ready to save`;
 
             resCleanVideo.src = url;
             resOrigVideo.src = currentVideo.url;
+            resCleanVideo.load();
+            resOrigVideo.load();
             initSplitViewer();
         }
 

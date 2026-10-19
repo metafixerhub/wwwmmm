@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCancelProcess = document.getElementById('btnCancelProcess');
 
     const resultMetaStats = document.getElementById('resultMetaStats');
+    const btnSaveGalleryVideo = document.getElementById('btnSaveGalleryVideo');
     const btnDownloadVideo = document.getElementById('btnDownloadVideo');
     const btnProcessAnother = document.getElementById('btnProcessAnother');
     const resultVideoClean = document.getElementById('resultVideoClean');
@@ -93,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnPlayPauseComparison = document.getElementById('btnPlayPauseComparison');
     const compPlayIcon = document.getElementById('compPlayIcon');
     const compPlayText = document.getElementById('compPlayText');
+    let lastCompletedBlob = null;
 
     // -------------------------------------------------------------
     // Auto-Detect Engine (Frontend vs Backend)
@@ -594,10 +596,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function startClientSideProcessing(box, mode, inpaintRadius, featherRadius) {
-        progressStatusLabel.textContent = 'Processing frame-by-frame inside your browser (100% private)';
+        const speedMode = document.querySelector('input[name="speedMode"]:checked')?.value || 'ultra';
+        const resolutionPreset = document.getElementById('resolutionPresetSelect')?.value || '720p';
+
+        if (speedMode === 'ultra') {
+            progressStatusLabel.textContent = '🚀 Ultra Speed GPU Inpainting (30-60 FPS • 100% private)';
+        } else {
+            progressStatusLabel.textContent = '🎯 Precision Inpainting frame-by-frame (100% private)';
+        }
 
         activeClientProcessor = new ClientVideoProcessor(sourceVideo, box, {
             mode: mode,
+            engineSpeed: speedMode,
+            resolutionPreset: resolutionPreset,
             inpaintRadius: inpaintRadius,
             featherRadius: featherRadius,
             fps: currentVideoData.metadata.fps || 30,
@@ -619,12 +630,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
             onComplete: (status) => {
+                lastCompletedBlob = status.blob;
                 progressModal.classList.add('hidden');
                 showCompletedResult({
                     output_url: status.output_url,
                     stream_url: status.stream_url,
                     elapsed_seconds: status.elapsed_seconds,
-                    fps: status.fps
+                    fps: status.fps,
+                    blob: status.blob
                 });
             },
             onError: (err) => {
@@ -706,8 +719,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resultMetaStats.textContent = `Completed in ${taskData.elapsed_seconds}s at ${taskData.fps} FPS • Lossless audio preserved`;
 
+        // Wire up universal mobile download & gallery save
+        if (btnSaveGalleryVideo) {
+            btnSaveGalleryVideo.onclick = async () => {
+                if (taskData.blob) {
+                    await ClientVideoProcessor.saveOrDownload(taskData.blob, currentVideoData.filename);
+                } else if (taskData.output_url) {
+                    try {
+                        const res = await fetch(taskData.output_url);
+                        const b = await res.blob();
+                        await ClientVideoProcessor.saveOrDownload(b, currentVideoData.filename);
+                    } catch (e) {
+                        window.open(taskData.output_url, '_blank');
+                    }
+                }
+            };
+        }
+
         btnDownloadVideo.href = taskData.output_url;
         btnDownloadVideo.download = `crystal_clear_${currentVideoData.filename}`;
+        btnDownloadVideo.onclick = async (e) => {
+            if (taskData.blob) {
+                e.preventDefault();
+                await ClientVideoProcessor.saveOrDownload(taskData.blob, currentVideoData.filename);
+            }
+        };
 
         resultVideoClean.src = taskData.stream_url;
         resultVideoOrig.src = currentVideoData.file_url;

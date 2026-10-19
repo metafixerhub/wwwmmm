@@ -227,6 +227,40 @@
                             <span class="text-[10px] font-semibold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">AI Enhanced</span>
                         </div>
 
+                        <!-- Engine Speed Mode Selector -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Processing Speed Engine</label>
+                            <div class="grid grid-cols-1 gap-1.5">
+                                <label class="flex items-center p-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 cursor-pointer hover:bg-indigo-500/15 transition">
+                                    <input type="radio" name="speedMode" value="ultra" checked class="text-indigo-600 focus:ring-0 mr-2">
+                                    <div>
+                                        <div class="text-xs font-semibold text-white flex items-center space-x-1">
+                                            <span>🚀 Ultra Speed GPU (30-60 FPS)</span>
+                                            <span class="text-[9px] bg-emerald-500 text-slate-950 px-1 py-0.2 rounded font-extrabold">Fastest</span>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400">Zero seek latency hardware decode. Recommended for phones.</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-2 rounded-xl border border-slate-800 bg-slate-900/60 cursor-pointer hover:bg-slate-800/50 transition">
+                                    <input type="radio" name="speedMode" value="precision" class="text-indigo-600 focus:ring-0 mr-2">
+                                    <div>
+                                        <div class="text-xs font-semibold text-white">🎯 Frame-by-Frame Precision</div>
+                                        <div class="text-[10px] text-slate-400">Step-by-step seeking for short clips.</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Resolution Preset -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Resolution Optimizer</label>
+                            <select id="resolutionPresetSelect" class="w-full bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-indigo-500">
+                                <option value="720p" selected>⚡ Ultra Fast (720p - Best on Phone & Social Media)</option>
+                                <option value="1080p">🚀 Full HD (1080p Crisp)</option>
+                                <option value="native">💎 Original Video Resolution</option>
+                            </select>
+                        </div>
+
                         <!-- Mode Selector -->
                         <div>
                             <div class="flex items-center justify-between mb-1.5">
@@ -430,14 +464,22 @@
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-3">
-                    <a id="btnDownloadVideo" href="#" download class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition transform hover:-translate-y-0.5 flex items-center space-x-2">
+                <div class="flex items-center space-x-2.5 flex-wrap">
+                    <button id="btnSaveGalleryVideo" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs tracking-wide shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center space-x-2">
+                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                        <span>Save to Gallery / Phone</span>
+                    </button>
+                    <a id="btnDownloadVideo" href="#" download class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/25 transition transform hover:-translate-y-0.5 flex items-center space-x-2">
                         <i data-lucide="download" class="w-4 h-4"></i>
-                        <span>Download Crystal-Clear Video</span>
+                        <span>Direct Download</span>
                     </a>
                     <button id="btnProcessAnother" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition">
                         Process Another
                     </button>
+                </div>
+                <div class="w-full text-xs text-indigo-300 bg-slate-900/60 p-2.5 rounded-xl border border-indigo-500/20 flex items-center space-x-2">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-indigo-400 flex-shrink-0"></i>
+                    <span><strong>Phone Tip:</strong> Tap <b>"Save to Gallery / Phone"</b> to save directly into your Photos, Camera Roll, or WhatsApp. You can also tap &amp; hold the video below to save it!</span>
                 </div>
             </div>
 

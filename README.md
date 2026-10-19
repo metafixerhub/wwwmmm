@@ -4,6 +4,22 @@ A modern, user-friendly desktop web application designed to cleanly remove water
 
 ---
 
+## 📱 Android APK & Mobile Installation
+
+### ⬇️ Download Android APK File
+Anyone can download and install the Android app directly on their phone:
+👉 **[Download APK from GitHub Releases](https://github.com/metafixerhub/wwwmmm/releases)**
+- **File Name**: `CrystalClear-Watermark-Remover.apk`
+- **Automatic Build**: Built automatically via GitHub Actions cloud runner on every push.
+- **100% Offline**: Works completely on your device with no internet connection required.
+
+### 📲 Instant 1-Tap Install (PWA without APK):
+When visiting your Vercel URL on any Android phone (Chrome or Edge):
+- Tap the **"Add to Home Screen"** or **"Install App"** prompt.
+- Installs in 1 second as a full-screen native Android app icon!
+
+---
+
 ## 🌐 Vercel Deployment & Offline Quick Start
 
 ### 🚀 Deploy to Vercel (1-Click)

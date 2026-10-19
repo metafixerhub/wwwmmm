@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrystalClear - AI Video Watermark Remover</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        darkbg: '#0B0F19',
+                        panelbg: '#111827',
+                        cardbg: '#1F2937'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-darkbg text-slate-100 min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-indigo-500 selection:text-white flex flex-col">
+
+    <!-- Top Navigation -->
+    <header class="border-b border-slate-800/80 bg-panelbg/60 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+                        CrystalClear AI
+                    </h1>
+                    <p class="text-xs text-slate-400">Professional Video Watermark Remover</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span>
+                    Engine Ready • OpenCV + FFmpeg
+                </span>
+                <button id="btnTrySample" class="inline-flex items-center space-x-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition">
+                    <i data-lucide="play-circle" class="w-4 h-4"></i>
+                    <span>Try Sample Demo</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col">
+        
+        <!-- Upload Screen -->
+        <section id="uploadSection" class="my-auto flex flex-col items-center justify-center max-w-3xl mx-auto w-full py-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+                    Remove Watermarks with <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Crystal Clarity</span>
+                </h2>
+                <p class="text-slate-400 text-sm sm:text-base max-w-xl mx-auto">
+                    Simply drop your video, draw a box over the watermark, and let the AI seamless inpainting engine erase it cleanly without blur seams.
+                </p>
+            </div>
+
+            <!-- Upload Drop Zone Box -->
+            <div id="dropZone" class="w-full relative group cursor-pointer border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-panelbg/50 hover:bg-panelbg/80 rounded-2xl p-10 sm:p-14 text-center transition-all duration-300 shadow-2xl hover:shadow-indigo-500/10 backdrop-blur-sm">
+                <input type="file" id="videoFileInput" accept="video/mp4,video/quicktime,video/x-matroska,video/webm,video/x-msvideo" class="hidden">
+                
+                <div class="flex flex-col items-center justify-center space-y-4">
+                    <div class="w-20 h-20 rounded-2xl bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center transition duration-300 group-hover:scale-110">
+                        <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-white group-hover:text-indigo-300 transition">
+                            Click to upload or drag & drop video
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Supports MP4, MOV, MKV, WebM, AVI (Full HD & 4K compatible)
+                        </p>
+                    </div>
+                    <div class="pt-2 flex items-center space-x-2">
+                        <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-400 font-mono">Lossless Audio Kept</span>
+                        <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-400 font-mono">No Size Limit</span>
+                        <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-400 font-mono">Zero Artifacts</span>
+                    </div>
+                </div>
+
+                <!-- Uploading Spinner Overlay -->
+                <div id="uploadSpinner" class="hidden absolute inset-0 bg-panelbg/90 rounded-2xl flex flex-col items-center justify-center space-y-3">
+                    <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-sm font-medium text-slate-200">Analyzing video frames & audio streams...</p>
+                </div>
+            </div>
+
+            <!-- Quick Demo Button -->
+            <div class="mt-6 flex items-center justify-center space-x-3 text-xs text-slate-400">
+                <span>Don't have a video ready?</span>
+                <button id="btnTrySampleAlt" class="text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-4 transition">
+                    Load instant sample video with watermark
+                </button>
+            </div>
+        </section>
+
+        <!-- Editor & Selection Workspace Screen -->
+        <section id="editorSection" class="hidden flex-1 flex flex-col gap-6">
+            
+            <!-- Video Info Bar -->
+            <div class="bg-panelbg border border-slate-800 rounded-xl px-5 py-3 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                        <i data-lucide="video" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h4 id="videoFilename" class="text-sm font-semibold text-white truncate max-w-xs">video.mp4</h4>
+                        <div class="flex items-center space-x-2 text-xs text-slate-400">
+                            <span id="videoResolution">1920x1080</span>
+                            <span>•</span>
+                            <span id="videoDuration">00:00</span>
+                            <span>•</span>
+                            <span id="videoFps">30 fps</span>
+                            <span>•</span>
+                            <span id="videoSize">12 MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button id="btnChangeVideo" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition flex items-center space-x-1.5">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                        <span>Upload Different Video</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Workspace Layout: Left Canvas Video Editor, Right Controls -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+                
+                <!-- Left: Video Canvas Viewport -->
+                <div class="lg:col-span-8 flex flex-col bg-panelbg border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    
+                    <!-- Canvas Workspace Container -->
+                    <div class="relative bg-black flex-1 flex items-center justify-center min-h-[380px] sm:min-h-[460px] p-2 select-none overflow-hidden" id="canvasContainer">
+                        
+                        <!-- Underlying hidden/streaming HTML5 Video element -->
+                        <video id="sourceVideo" class="hidden" playsinline preload="auto"></video>
+
+                        <!-- Interactive Canvas Overlay -->
+                        <div class="relative inline-block max-w-full max-h-full">
+                            <canvas id="editorCanvas" class="max-w-full max-h-[65vh] object-contain rounded-lg shadow-2xl cursor-crosshair block"></canvas>
+                        </div>
+
+                        <!-- Instructions Tooltip when no box drawn -->
+                        <div id="selectionHint" class="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none bg-slate-900/90 border border-slate-700/80 px-4 py-2 rounded-full text-xs font-medium text-slate-200 backdrop-blur-md shadow-lg flex items-center space-x-2 transition-opacity duration-300">
+                            <i data-lucide="crop" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            <span>Click & drag on the video to select the watermark area</span>
+                        </div>
+                    </div>
+
+                    <!-- Video Playback & Frame Scrubber Toolbar -->
+                    <div class="bg-slate-900/95 border-t border-slate-800 px-4 py-3 flex flex-col gap-2">
+                        
+                        <!-- Timeline Scrubber -->
+                        <div class="flex items-center space-x-3">
+                            <span id="currentTimeDisplay" class="text-xs font-mono text-slate-300 w-12 text-right">00:00</span>
+                            <div class="relative flex-1 flex items-center">
+                                <input type="range" id="timelineSlider" min="0" max="100" value="0" step="0.01" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            </div>
+                            <span id="totalDurationDisplay" class="text-xs font-mono text-slate-400 w-12">00:00</span>
+                        </div>
+
+                        <!-- Controls: Play/Pause, Step Frames, Clear Selection -->
+                        <div class="flex items-center justify-between pt-1">
+                            <div class="flex items-center space-x-2">
+                                <button id="btnPrevFrame" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Step 1 Frame Back">
+                                    <i data-lucide="skip-back" class="w-4 h-4"></i>
+                                </button>
+                                <button id="btnPlayPause" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center space-x-1.5 transition">
+                                    <i data-lucide="play" id="playIcon" class="w-4 h-4 fill-current"></i>
+                                    <span id="playText">Play</span>
+                                </button>
+                                <button id="btnNextFrame" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Step 1 Frame Forward">
+                                    <i data-lucide="skip-forward" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <!-- Selection Box Dimensions Pill -->
+                            <div id="boxCoordsPill" class="hidden items-center space-x-2 text-xs font-mono bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-indigo-300">
+                                <span>Area: <b id="boxCoordsText">X: 0, Y: 0 | 0 x 0</b></span>
+                                <button id="btnClearBox" class="ml-2 text-slate-400 hover:text-rose-400 transition" title="Clear selection">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Settings, Live Preview & Process Trigger Panel -->
+                <div class="lg:col-span-4 flex flex-col gap-5">
+                    
+                    <!-- Inpaint Quality & Controls Card -->
+                    <div class="bg-panelbg border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                                <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i>
+                                <span>Inpainting Engine</span>
+                            </h3>
+                            <span class="text-[10px] font-semibold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">AI Enhanced</span>
+                        </div>
+
+                        <!-- Mode Selector -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Removal Algorithm</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                <label class="flex items-center p-2.5 rounded-xl border border-indigo-500/40 bg-indigo-500/10 cursor-pointer hover:bg-indigo-500/15 transition group">
+                                    <input type="radio" name="inpaintMode" value="crystal_clear" checked class="text-indigo-600 focus:ring-0 mr-2.5">
+                                    <div>
+                                        <div class="text-xs font-semibold text-white flex items-center space-x-1">
+                                            <span>🌟 Crystal Clear (AI Hybrid)</span>
+                                            <span class="text-[10px] bg-indigo-500 text-white px-1.5 py-0.2 rounded font-bold">Best</span>
+                                        </div>
+                                        <div class="text-[11px] text-slate-400">Navier-Stokes + Telea texture synthesis with feathering</div>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-center p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 cursor-pointer hover:bg-slate-800/50 transition group">
+                                    <input type="radio" name="inpaintMode" value="delogo" class="text-indigo-600 focus:ring-0 mr-2.5">
+                                    <div>
+                                        <div class="text-xs font-semibold text-white">⚡ Fast Delogo</div>
+                                        <div class="text-[11px] text-slate-400">High-speed edge interpolation (100+ FPS)</div>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-center p-2.5 rounded-xl border border-slate-800 bg-slate-900/60 cursor-pointer hover:bg-slate-800/50 transition group">
+                                    <input type="radio" name="inpaintMode" value="blur" class="text-indigo-600 focus:ring-0 mr-2.5">
+                                    <div>
+                                        <div class="text-xs font-semibold text-white">🌫️ Feathered Blur / Shield</div>
+                                        <div class="text-[11px] text-slate-400">Soft gradient blur for privacy/censoring</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Inpaint Radius Slider -->
+                        <div>
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-medium text-slate-300">Inpaint Radius</span>
+                                <span id="inpaintRadiusVal" class="font-mono text-indigo-400">5 px</span>
+                            </div>
+                            <input type="range" id="inpaintRadiusInput" min="2" max="15" value="5" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            <p class="text-[10px] text-slate-400 mt-1">Controls the neighborhood thickness used to sample surrounding pixels.</p>
+                        </div>
+
+                        <!-- Edge Feathering Slider -->
+                        <div>
+                            <div class="flex items-center justify-between text-xs mb-1">
+                                <span class="font-medium text-slate-300">Edge Feathering (No Seams)</span>
+                                <span id="featherRadiusVal" class="font-mono text-indigo-400">4 px</span>
+                            </div>
+                            <input type="range" id="featherRadiusInput" min="0" max="12" value="4" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            <p class="text-[10px] text-slate-400 mt-1">Softly blends the boundary so no rectangular lines appear.</p>
+                        </div>
+
+                        <!-- Live Frame Preview Button -->
+                        <div class="pt-2">
+                            <button id="btnTestFramePreview" class="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-sm">
+                                <i data-lucide="eye" class="w-4 h-4 text-indigo-400"></i>
+                                <span>Preview Current Frame (Instant Test)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Process & Export Action Card -->
+                    <div class="bg-gradient-to-br from-indigo-950/40 via-panelbg to-panelbg border border-indigo-500/30 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 text-indigo-400 mb-2">
+                                <i data-lucide="zap" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold uppercase tracking-wider">Ready to Process</span>
+                            </div>
+                            <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                                Process all frames and output a crystal-clear video with 100% synchronized lossless audio.
+                            </p>
+                        </div>
+
+                        <button id="btnStartProcess" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:pointer-events-none">
+                            <i data-lucide="wand-2" class="w-4 h-4"></i>
+                            <span>Process & Remove Watermark</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Modal (Shows during active processing) -->
+        <div id="progressModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-panelbg border border-slate-700 max-w-lg w-full rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col space-y-6 animate-scaleUp">
+                
+                <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                            <i data-lucide="loader" class="w-5 h-5 animate-spin"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-white">Removing Watermark...</h3>
+                            <p class="text-xs text-slate-400" id="progressStatusLabel">Rendering crystal-clear frames</p>
+                        </div>
+                    </div>
+                    <button id="btnCancelProcess" class="text-xs text-slate-400 hover:text-rose-400 font-medium px-2 py-1 rounded transition">
+                        Cancel
+                    </button>
+                </div>
+
+                <!-- Live Preview Thumbnail from Processor -->
+                <div class="w-full h-44 bg-black rounded-xl overflow-hidden border border-slate-800 relative flex items-center justify-center">
+                    <img id="progressThumbnail" class="w-full h-full object-contain" src="" alt="Processing preview">
+                    <div class="absolute bottom-2 right-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-[11px] font-mono text-indigo-300">
+                        Live Output Stream
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div>
+                    <div class="flex items-center justify-between text-xs font-semibold mb-2">
+                        <span class="text-slate-300">Progress</span>
+                        <span id="progressPercentText" class="text-indigo-400 font-mono text-sm">0.0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5">
+                        <div id="progressBarFill" class="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Statistics: ETA, Speed, Frames -->
+                <div class="grid grid-cols-3 gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
+                    <div>
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Estimated Time</div>
+                        <div id="statEta" class="text-sm font-bold text-amber-400 font-mono mt-0.5">Calculating...</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Speed</div>
+                        <div id="statFps" class="text-sm font-bold text-white font-mono mt-0.5">0.0 FPS</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] text-slate-400 uppercase tracking-wider">Frames</div>
+                        <div id="statFrames" class="text-sm font-bold text-slate-300 font-mono mt-0.5">0 / 0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Frame Preview Modal (Instant Test on Current Frame) -->
+        <div id="previewModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+            <div class="bg-panelbg border border-slate-700 max-w-4xl w-full rounded-2xl p-6 shadow-2xl flex flex-col space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-indigo-400"></i>
+                        <h3 class="text-base font-bold text-white">Instant Frame Inpaint Result</h3>
+                    </div>
+                    <button id="btnClosePreviewModal" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Before / After Side-by-Side Images -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col space-y-2">
+                        <div class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                            <span>Original (With Watermark)</span>
+                            <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-rose-300">Before</span>
+                        </div>
+                        <div class="bg-black rounded-xl overflow-hidden border border-slate-800 h-64 flex items-center justify-center">
+                            <img id="modalImgOriginal" class="max-w-full max-h-full object-contain" src="">
+                        </div>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <div class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+                            <span>Watermark Removed (Cleaned)</span>
+                            <span class="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded text-emerald-300">Crystal Clear</span>
+                        </div>
+                        <div class="bg-black rounded-xl overflow-hidden border border-emerald-500/40 h-64 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                            <img id="modalImgResult" class="max-w-full max-h-full object-contain" src="">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button id="btnProceedFromPreview" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center space-x-1.5">
+                        <span>Looks Great! Process Entire Video</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen (Completed Video with Interactive Before/After Split View) -->
+        <section id="resultSection" class="hidden flex-1 flex flex-col gap-6 max-w-5xl mx-auto w-full">
+            
+            <!-- Success Notification Card -->
+            <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500 text-black flex items-center justify-center font-bold">
+                        <i data-lucide="check" class="w-6 h-6 stroke-[3]"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Watermark Successfully Removed!</h3>
+                        <p class="text-xs text-slate-300" id="resultMetaStats">Video rendered with crystal clarity and lossless audio</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <a id="btnDownloadVideo" href="#" download class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition transform hover:-translate-y-0.5 flex items-center space-x-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Download Crystal-Clear Video</span>
+                    </a>
+                    <button id="btnProcessAnother" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition">
+                        Process Another
+                    </button>
+                </div>
+            </div>
+
+            <!-- Video Comparison Player with Interactive Slider -->
+            <div class="bg-panelbg border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-sm font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="columns-2" class="w-4 h-4 text-indigo-400"></i>
+                            <span>Interactive Comparison (Original vs Cleaned)</span>
+                        </h4>
+                        <p class="text-xs text-slate-400">Drag the central divider to compare before and after</p>
+                    </div>
+                    <div class="flex items-center space-x-2 text-xs">
+                        <span class="px-2.5 py-1 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium">Left: Original</span>
+                        <span class="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Right: Watermark Removed</span>
+                    </div>
+                </div>
+
+                <!-- Comparison Split Viewer Container -->
+                <div id="splitViewerContainer" class="relative w-full aspect-video max-h-[60vh] bg-black rounded-xl overflow-hidden select-none border border-slate-800">
+                    
+                    <!-- Cleaned Video (Base) -->
+                    <video id="resultVideoClean" class="absolute inset-0 w-full h-full object-contain pointer-events-none" playsinline loop></video>
+                    
+                    <!-- Original Video (Clipped Overlay) -->
+                    <div id="splitOverlayClip" class="absolute inset-0 w-full h-full overflow-hidden" style="width: 50%;">
+                        <video id="resultVideoOrig" class="absolute inset-0 w-full h-full object-contain pointer-events-none" playsinline loop></video>
+                    </div>
+
+                    <!-- Split Handle Slider Line -->
+                    <div id="splitDividerLine" class="absolute top-0 bottom-0 w-0.5 bg-white cursor-ew-resize shadow-2xl z-20 flex items-center justify-center" style="left: 50%;">
+                        <div class="w-8 h-8 rounded-full bg-white text-slate-900 shadow-xl flex items-center justify-center -translate-x-1/2">
+                            <i data-lucide="chevrons-left-right" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Synchronized Video Controls -->
+                <div class="flex items-center justify-between pt-2">
+                    <button id="btnPlayPauseComparison" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center space-x-1.5 transition">
+                        <i data-lucide="play" id="compPlayIcon" class="w-4 h-4 fill-current"></i>
+                        <span id="compPlayText">Play Synchronized Preview</span>
+                    </button>
+                    <div class="text-xs text-slate-400">
+                        Synchronized 1080p playback
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-panelbg/40 py-4 text-center text-xs text-slate-400">
+        <p>CrystalClear AI • Powered by High-Performance OpenCV Inpainting & FFmpeg Pipeline</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/canvas_selector.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        // Render lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -35,7 +35,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-darkbg text-slate-100 min-h-screen font-['Plus_Jakarta_Sans',sans-serif] selection:bg-indigo-500 selection:text-white flex flex-col">
 
@@ -55,10 +55,11 @@
             </div>
 
             <div class="flex items-center space-x-3">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span>
-                    Engine Ready • OpenCV + FFmpeg
-                </span>
+                <!-- Engine Mode Badge & Selector -->
+                <button id="btnToggleEngine" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition cursor-pointer" title="Click to toggle between Browser-Only and Native Backend engines">
+                    <span id="enginePulseDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span>
+                    <span id="engineStatusLabel">Detecting Engine...</span>
+                </button>
                 <button id="btnTrySample" class="inline-flex items-center space-x-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 transition">
                     <i data-lucide="play-circle" class="w-4 h-4"></i>
                     <span>Try Sample Demo</span>
@@ -492,8 +493,10 @@
     </footer>
 
     <!-- Scripts -->
-    <script src="/js/canvas_selector.js"></script>
-    <script src="/js/app.js"></script>
+    <script src="js/client_inpainter.js"></script>
+    <script src="js/client_processor.js"></script>
+    <script src="js/canvas_selector.js"></script>
+    <script src="js/app.js"></script>
     <script>
         // Render lucide icons
         lucide.createIcons();

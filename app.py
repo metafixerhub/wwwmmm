@@ -76,6 +76,13 @@ class ProcessRequest(BaseModel):
     temporal_blend: float = 0.3
 
 
+@app.get("/api/health")
+@app.get("/api/tasks")
+async def check_health():
+    """Health check endpoint to discover backend availability."""
+    return {"status": "ok", "engine": "native_backend", "tasks": list(tasks.keys())}
+
+
 @app.post("/api/upload")
 async def upload_video(file: UploadFile = File(...)):
     """

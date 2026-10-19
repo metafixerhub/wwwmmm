@@ -4,18 +4,26 @@ A modern, user-friendly desktop web application designed to cleanly remove water
 
 ---
 
-## 🚀 Quick Start (1-Click Launch)
+## 🚀 Quick Start (Two Ways to Run)
 
-### On Windows:
-Simply **double-click** the batch launcher in this folder:
-```
-start_app.bat
-```
-*Or from terminal / command prompt:*
-```bash
-python run.py
-```
-The app will automatically locate a free port (e.g. `http://127.0.0.1:8000`), launch the backend, and open your web browser automatically!
+### Option 1: 🌐 Frontend-Only Mode (Zero Server Needed)
+You can run this application **100% inside your browser** without running any backend or installing Python!
+- Simply open [`static/index.html`](file:///c:/Users/maksedul%20mandal/OneDrive/Desktop/watermark%20remover/static/index.html) in Google Chrome, Microsoft Edge, or Mozilla Firefox (or host it on **GitHub Pages**).
+- Videos are processed frame-by-frame directly inside the browser using HTML5 Canvas & MediaRecorder.
+- **100% Private**: Your video never leaves your computer.
+
+### Option 2: ⚡ Native Backend Mode (High-Speed FFmpeg + OpenCV)
+For very large 1080p/4K or long videos, run the native C++ backend for multi-threaded speed:
+- Simply **double-click** the batch launcher:
+  ```
+  start_app.bat
+  ```
+  *Or from terminal:*
+  ```bash
+  python run.py
+  ```
+- The frontend will automatically detect the backend and upgrade to **⚡ Native Backend Mode**!
+
 
 ---
 

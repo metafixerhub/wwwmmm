@@ -1,17 +1,31 @@
 /**
- * CrystalClear Video Watermark Remover - Main Application Logic
+ * CrystalClear Video Watermark Remover - Dual-Engine Application
+ * Supports BOTH:
+ * 1. 🌐 Browser-Only (Frontend) Mode: Runs 100% inside Chrome/Edge/Firefox using HTML5 Canvas & MediaRecorder (No server needed!)
+ * 2. ⚡ Native Backend Mode: Ultra-fast multi-threaded OpenCV & FFmpeg C++ processing.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // State
-    let currentVideoData = null; // { video_id, filename, metadata, ... }
+    // Engine State
+    let engineMode = 'browser'; // 'browser' or 'backend'
+    let isBackendAvailable = false;
+
+    // Video & Project State
+    let currentVideoData = null; // { video_id, filename, file_url, metadata, rawFile }
     let selector = null;
     let isPlaying = false;
     let animFrameId = null;
+
+    // Active Processing State
     let activeTaskId = null;
     let statusPollInterval = null;
+    let activeClientProcessor = null;
 
-    // Elements
+    // DOM Elements
+    const btnToggleEngine = document.getElementById('btnToggleEngine');
+    const enginePulseDot = document.getElementById('enginePulseDot');
+    const engineStatusLabel = document.getElementById('engineStatusLabel');
+
     const uploadSection = document.getElementById('uploadSection');
     const editorSection = document.getElementById('editorSection');
     const resultSection = document.getElementById('resultSection');
@@ -81,7 +95,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const compPlayText = document.getElementById('compPlayText');
 
     // -------------------------------------------------------------
-    // Initialization & Setup
+    // Auto-Detect Engine (Frontend vs Backend)
+    // -------------------------------------------------------------
+    async function detectEngine() {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 1200);
+            const res = await fetch('/api/tasks', { signal: controller.signal });
+            clearTimeout(timeout);
+
+            if (res.ok || res.status === 404 || res.status === 200) {
+                isBackendAvailable = true;
+                setEngineMode('backend');
+                return;
+            }
+        } catch (e) {
+            // Backend not running
+        }
+        isBackendAvailable = false;
+        setEngineMode('browser');
+    }
+
+    function setEngineMode(mode) {
+        engineMode = mode;
+        if (mode === 'backend') {
+            enginePulseDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2';
+            btnToggleEngine.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition cursor-pointer';
+            engineStatusLabel.textContent = '⚡ Native Backend (FFmpeg + OpenCV)';
+        } else {
+            enginePulseDot.className = 'w-2 h-2 rounded-full bg-cyan-400 mr-2';
+            btnToggleEngine.className = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition cursor-pointer';
+            engineStatusLabel.textContent = '🌐 Frontend-Only Mode (Offline / In-Browser)';
+        }
+    }
+
+    btnToggleEngine.addEventListener('click', () => {
+        if (!isBackendAvailable && engineMode === 'browser') {
+            alert('Backend server is not running right now. The application is running 100% in Browser-Only (Frontend) mode without needing any server!');
+            return;
+        }
+        const newMode = engineMode === 'backend' ? 'browser' : 'backend';
+        setEngineMode(newMode);
+    });
+
+    detectEngine();
+
+    // -------------------------------------------------------------
+    // Setup Canvas Selector
     // -------------------------------------------------------------
     selector = new CanvasSelector(editorCanvas, sourceVideo, (box) => {
         if (box && box.width > 2 && box.height > 2) {
@@ -96,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Slider displays
     inpaintRadiusInput.addEventListener('input', (e) => {
         inpaintRadiusVal.textContent = `${e.target.value} px`;
     });
@@ -105,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -------------------------------------------------------------
-    // Upload Handlers
+    // Upload Handlers (Supports Drag & Drop, File Picker, Sample)
     // -------------------------------------------------------------
     dropZone.addEventListener('click', () => videoFileInput.click());
 
@@ -137,48 +196,165 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleFileUpload(file) {
         uploadSpinner.classList.remove('hidden');
-        const formData = new FormData();
-        formData.append('file', file);
 
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
+        if (engineMode === 'backend') {
+            // Backend Upload
+            const formData = new FormData();
+            formData.append('file', file);
 
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || 'Upload failed');
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'Upload failed');
+                }
+
+                const data = await res.json();
+                data.rawFile = file;
+                loadVideoIntoWorkspace(data);
+            } catch (err) {
+                console.warn('Backend upload failed, falling back to Browser-Only mode:', err);
+                setEngineMode('browser');
+                loadVideoClientSide(file);
+            } finally {
+                uploadSpinner.classList.add('hidden');
             }
-
-            const data = await res.json();
-            loadVideoIntoWorkspace(data);
-        } catch (err) {
-            alert(`Upload error: ${err.message}`);
-        } finally {
+        } else {
+            // Frontend-Only Mode: Load video directly in browser with 0 upload delay!
+            loadVideoClientSide(file);
             uploadSpinner.classList.add('hidden');
         }
     }
 
+    function loadVideoClientSide(file) {
+        const fileUrl = URL.createObjectURL(file);
+        const tempVideo = document.createElement('video');
+        tempVideo.src = fileUrl;
+        tempVideo.preload = 'metadata';
+
+        tempVideo.onloadedmetadata = () => {
+            const width = tempVideo.videoWidth || 1280;
+            const height = tempVideo.videoHeight || 720;
+            const duration = tempVideo.duration || 10;
+            const sizeMB = Math.round((file.size / (1024 * 1024)) * 10) / 10;
+
+            const videoData = {
+                video_id: 'client_' + Date.now(),
+                filename: file.name,
+                file_url: fileUrl,
+                rawFile: file,
+                metadata: {
+                    width: width,
+                    height: height,
+                    duration: duration,
+                    fps: 30,
+                    file_size_mb: sizeMB
+                }
+            };
+            loadVideoIntoWorkspace(videoData);
+        };
+    }
+
     async function loadSampleVideo() {
         uploadSpinner.classList.remove('hidden');
-        try {
-            const res = await fetch('/api/create_sample', { method: 'POST' });
-            if (!res.ok) throw new Error('Failed to create sample video');
-            const data = await res.json();
-            loadVideoIntoWorkspace(data);
 
-            // Pre-select the watermark area if suggested
-            if (data.suggested_region) {
-                setTimeout(() => {
-                    selector.setBox(data.suggested_region);
-                }, 300);
+        if (engineMode === 'backend') {
+            try {
+                const res = await fetch('/api/create_sample', { method: 'POST' });
+                if (res.ok) {
+                    const data = await res.json();
+                    loadVideoIntoWorkspace(data);
+                    if (data.suggested_region) {
+                        setTimeout(() => selector.setBox(data.suggested_region), 300);
+                    }
+                    uploadSpinner.classList.add('hidden');
+                    return;
+                }
+            } catch (e) {
+                // Fallback to client sample
             }
-        } catch (err) {
-            alert(`Error loading sample: ${err.message}`);
-        } finally {
-            uploadSpinner.classList.add('hidden');
         }
+
+        // Client-side generated sample video
+        generateClientSampleVideo().then((sampleData) => {
+            loadVideoIntoWorkspace(sampleData);
+            setTimeout(() => {
+                selector.setBox(sampleData.suggested_region);
+            }, 300);
+            uploadSpinner.classList.add('hidden');
+        });
+    }
+
+    /**
+     * Generates a 4-second animated video with a watermark inside the browser.
+     */
+    function generateClientSampleVideo() {
+        return new Promise((resolve) => {
+            const w = 1280, h = 720, fps = 30, dur = 4;
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+
+            const stream = canvas.captureStream(fps);
+            const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            const chunks = [];
+            recorder.ondataavailable = e => chunks.push(e.data);
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                resolve({
+                    video_id: 'sample_browser',
+                    filename: 'Sample_Demo_Video.webm',
+                    file_url: url,
+                    metadata: { width: w, height: h, duration: dur, fps: fps, file_size_mb: 1.2 },
+                    suggested_region: { x: 920, y: 60, width: 300, height: 70 }
+                });
+            };
+
+            recorder.start();
+            let frame = 0;
+            const total = fps * dur;
+
+            const interval = setInterval(() => {
+                if (frame >= total) {
+                    clearInterval(interval);
+                    recorder.stop();
+                    return;
+                }
+                const t = frame / total;
+
+                // Animated background
+                const grad = ctx.createLinearGradient(0, 0, w, h);
+                grad.addColorStop(0, `hsl(${t * 360}, 65%, 45%)`);
+                grad.addColorStop(1, `hsl(${(t * 360 + 60) % 360}, 75%, 25%)`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                // Moving orb
+                const ox = 400 + Math.sin(t * Math.PI * 2) * 250;
+                const oy = 350 + Math.cos(t * Math.PI * 2) * 100;
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(ox, oy, 70, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Watermark box in top right
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fillRect(920, 60, 300, 70);
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(920, 60, 300, 70);
+                ctx.fillStyle = '#991b1b';
+                ctx.font = 'bold 24px sans-serif';
+                ctx.fillText('WATERMARK PRO', 950, 105);
+
+                frame++;
+            }, 1000 / fps);
+        });
     }
 
     // -------------------------------------------------------------
@@ -188,33 +364,26 @@ document.addEventListener('DOMContentLoaded', () => {
         currentVideoData = videoData;
         const meta = videoData.metadata;
 
-        // Populate info bar
         videoFilename.textContent = videoData.filename;
         videoResolution.textContent = `${meta.width} × ${meta.height}`;
         videoDuration.textContent = formatTime(meta.duration);
         videoFps.textContent = `${meta.fps} fps`;
         videoSize.textContent = `${meta.file_size_mb} MB`;
 
-        // Switch screen view
         uploadSection.classList.add('hidden');
         resultSection.classList.add('hidden');
         editorSection.classList.remove('hidden');
 
-        // Setup underlying video element
         sourceVideo.src = videoData.file_url;
         sourceVideo.load();
 
         sourceVideo.onloadedmetadata = () => {
-            // Set canvas internal resolution to video's true native resolution
             editorCanvas.width = meta.width;
             editorCanvas.height = meta.height;
-
             timelineSlider.max = meta.duration;
             timelineSlider.value = 0;
             totalDurationDisplay.textContent = formatTime(meta.duration);
             currentTimeDisplay.textContent = '00:00';
-
-            // Initial render
             sourceVideo.currentTime = 0;
         };
 
@@ -248,9 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selector.clearBox();
     });
 
-    btnClearBox.addEventListener('click', () => {
-        selector.clearBox();
-    });
+    btnClearBox.addEventListener('click', () => selector.clearBox());
 
     // -------------------------------------------------------------
     // Video Controls & Timeline
@@ -282,7 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
         selector.render();
     });
 
-    // Step frames back/forward (approx 1 frame = 1/fps seconds)
     btnPrevFrame.addEventListener('click', () => {
         if (!currentVideoData) return;
         sourceVideo.pause();
@@ -298,7 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // -------------------------------------------------------------
-    // Instant Single-Frame Preview
+    // Instant Single-Frame Preview (Works in BOTH Backend & Browser)
     // -------------------------------------------------------------
     btnTestFramePreview.addEventListener('click', async () => {
         const box = selector.getBox();
@@ -311,55 +477,70 @@ document.addEventListener('DOMContentLoaded', () => {
         const inpaintRadius = parseInt(inpaintRadiusInput.value);
         const featherRadius = parseInt(featherRadiusInput.value);
 
-        btnTestFramePreview.disabled = true;
-        btnTestFramePreview.innerHTML = `
-            <div class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mr-2"></div>
-            <span>Generating Preview...</span>
-        `;
-
-        try {
-            const res = await fetch('/api/preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    video_id: currentVideoData.video_id,
-                    timestamp: sourceVideo.currentTime,
-                    regions: [box],
-                    mode: mode,
-                    inpaint_radius: inpaintRadius,
-                    feather_radius: featherRadius
-                })
-            });
-
-            if (!res.ok) throw new Error('Failed to generate preview');
-            const data = await res.json();
-
-            modalImgOriginal.src = data.original_preview;
-            modalImgResult.src = data.inpainted_preview;
-            previewModal.classList.remove('hidden');
-        } catch (err) {
-            alert(`Preview error: ${err.message}`);
-        } finally {
-            btnTestFramePreview.disabled = false;
-            btnTestFramePreview.innerHTML = `
-                <i data-lucide="eye" class="w-4 h-4 text-indigo-400"></i>
-                <span>Preview Current Frame (Instant Test)</span>
-            `;
-            lucide.createIcons();
+        if (engineMode === 'backend') {
+            btnTestFramePreview.disabled = true;
+            try {
+                const res = await fetch('/api/preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        video_id: currentVideoData.video_id,
+                        timestamp: sourceVideo.currentTime,
+                        regions: [box],
+                        mode: mode,
+                        inpaint_radius: inpaintRadius,
+                        feather_radius: featherRadius
+                    })
+                });
+                if (!res.ok) throw new Error('Preview failed');
+                const data = await res.json();
+                modalImgOriginal.src = data.original_preview;
+                modalImgResult.src = data.inpainted_preview;
+                previewModal.classList.remove('hidden');
+            } catch (err) {
+                // Fallback to client inpainter
+                renderClientPreview(box, mode, inpaintRadius, featherRadius);
+            } finally {
+                btnTestFramePreview.disabled = false;
+            }
+        } else {
+            // Frontend-Only instant preview in < 5ms
+            renderClientPreview(box, mode, inpaintRadius, featherRadius);
         }
     });
 
-    btnClosePreviewModal.addEventListener('click', () => {
-        previewModal.classList.add('hidden');
-    });
+    function renderClientPreview(box, mode, inpaintRadius, featherRadius) {
+        const w = editorCanvas.width;
+        const h = editorCanvas.height;
 
+        // Original frame snapshot
+        const origCanvas = document.createElement('canvas');
+        origCanvas.width = w; origCanvas.height = h;
+        const oCtx = origCanvas.getContext('2d');
+        oCtx.drawImage(sourceVideo, 0, 0, w, h);
+        modalImgOriginal.src = origCanvas.toDataURL('image/jpeg', 0.9);
+
+        // Inpainted frame snapshot
+        const inpaintCanvas = document.createElement('canvas');
+        inpaintCanvas.width = w; inpaintCanvas.height = h;
+        const iCtx = inpaintCanvas.getContext('2d');
+        iCtx.drawImage(sourceVideo, 0, 0, w, h);
+
+        const inpainter = new ClientInpainter({ mode, inpaintRadius, featherRadius });
+        inpainter.inpaintCanvas(iCtx, box);
+        modalImgResult.src = inpaintCanvas.toDataURL('image/jpeg', 0.9);
+
+        previewModal.classList.remove('hidden');
+    }
+
+    btnClosePreviewModal.addEventListener('click', () => previewModal.classList.add('hidden'));
     btnProceedFromPreview.addEventListener('click', () => {
         previewModal.classList.add('hidden');
         btnStartProcess.click();
     });
 
     // -------------------------------------------------------------
-    // Full Video Watermark Removal Processing
+    // Full Video Watermark Removal (Backend OR Browser Engine)
     // -------------------------------------------------------------
     btnStartProcess.addEventListener('click', async () => {
         const box = selector.getBox();
@@ -374,51 +555,53 @@ document.addEventListener('DOMContentLoaded', () => {
         const inpaintRadius = parseInt(inpaintRadiusInput.value);
         const featherRadius = parseInt(featherRadiusInput.value);
 
-        // Show progress HUD
         progressModal.classList.remove('hidden');
         progressBarFill.style.width = '0%';
         progressPercentText.textContent = '0.0%';
         statEta.textContent = 'Calculating...';
         statFps.textContent = '0.0 FPS';
-        statFrames.textContent = `0 / ${currentVideoData.metadata.total_frames}`;
+        statFrames.textContent = `0 / ${currentVideoData.metadata.total_frames || 100}`;
 
-        try {
-            const res = await fetch('/api/process', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    video_id: currentVideoData.video_id,
-                    regions: [box],
-                    mode: mode,
-                    inpaint_radius: inpaintRadius,
-                    feather_radius: featherRadius,
-                    temporal_blend: 0.3
-                })
-            });
+        if (engineMode === 'backend') {
+            // Native Backend Processing
+            progressStatusLabel.textContent = 'Rendering with native FFmpeg + OpenCV';
+            try {
+                const res = await fetch('/api/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        video_id: currentVideoData.video_id,
+                        regions: [box],
+                        mode: mode,
+                        inpaint_radius: inpaintRadius,
+                        feather_radius: featherRadius,
+                        temporal_blend: 0.3
+                    })
+                });
 
-            if (!res.ok) throw new Error('Failed to start processing');
-            const data = await res.json();
-            activeTaskId = data.task_id;
-
-            // Start polling status
-            startStatusPolling(activeTaskId);
-        } catch (err) {
-            progressModal.classList.add('hidden');
-            alert(`Processing failed to start: ${err.message}`);
+                if (!res.ok) throw new Error('Processing initiation failed');
+                const data = await res.json();
+                activeTaskId = data.task_id;
+                startStatusPolling(activeTaskId);
+            } catch (err) {
+                console.warn('Backend processing failed, falling back to browser processor:', err);
+                startClientSideProcessing(box, mode, inpaintRadius, featherRadius);
+            }
+        } else {
+            // Frontend-Only Processing right in the browser!
+            startClientSideProcessing(box, mode, inpaintRadius, featherRadius);
         }
     });
 
-    function startStatusPolling(taskId) {
-        if (statusPollInterval) clearInterval(statusPollInterval);
+    function startClientSideProcessing(box, mode, inpaintRadius, featherRadius) {
+        progressStatusLabel.textContent = 'Processing frame-by-frame inside your browser (100% private)';
 
-        statusPollInterval = setInterval(async () => {
-            try {
-                const res = await fetch(`/api/status/${taskId}`);
-                if (!res.ok) return;
-
-                const status = await res.json();
-
-                // Update UI elements
+        activeClientProcessor = new ClientVideoProcessor(sourceVideo, box, {
+            mode: mode,
+            inpaintRadius: inpaintRadius,
+            featherRadius: featherRadius,
+            fps: currentVideoData.metadata.fps || 30,
+            onProgress: (status) => {
                 const pct = status.percent || 0;
                 progressBarFill.style.width = `${pct}%`;
                 progressPercentText.textContent = `${pct.toFixed(1)}%`;
@@ -432,7 +615,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (status.thumbnail) {
-                    progressThumbnail.src = `data:image/jpeg;base64,${status.thumbnail}`;
+                    progressThumbnail.src = status.thumbnail;
+                }
+            },
+            onComplete: (status) => {
+                progressModal.classList.add('hidden');
+                showCompletedResult({
+                    output_url: status.output_url,
+                    stream_url: status.stream_url,
+                    elapsed_seconds: status.elapsed_seconds,
+                    fps: status.fps
+                });
+            },
+            onError: (err) => {
+                progressModal.classList.add('hidden');
+                if (err.message && !err.message.includes('cancelled')) {
+                    alert(`Browser processing error: ${err.message}`);
+                }
+            }
+        });
+
+        activeClientProcessor.start().catch(() => {});
+    }
+
+    function startStatusPolling(taskId) {
+        if (statusPollInterval) clearInterval(statusPollInterval);
+
+        statusPollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/status/${taskId}`);
+                if (!res.ok) return;
+
+                const status = await res.json();
+                const pct = status.percent || 0;
+                progressBarFill.style.width = `${pct}%`;
+                progressPercentText.textContent = `${pct.toFixed(1)}%`;
+                statFps.textContent = `${status.fps || 0} FPS`;
+                statFrames.textContent = `${status.current_frame || 0} / ${status.total_frames || 0}`;
+
+                if (status.eta_seconds !== undefined && status.eta_seconds > 0) {
+                    statEta.textContent = formatETA(status.eta_seconds);
+                } else if (pct > 0) {
+                    statEta.textContent = 'Almost done...';
+                }
+
+                if (status.thumbnail) {
+                    progressThumbnail.src = `data:image/jpeg;base64,{status.thumbnail}`;
                 }
 
                 if (status.status === 'completed') {
@@ -451,8 +679,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     btnCancelProcess.addEventListener('click', async () => {
-        if (!activeTaskId) return;
-        if (confirm('Are you sure you want to cancel the watermark removal?')) {
+        if (activeClientProcessor) {
+            activeClientProcessor.cancel();
+            activeClientProcessor = null;
+            progressModal.classList.add('hidden');
+            return;
+        }
+
+        if (activeTaskId && confirm('Are you sure you want to cancel the watermark removal?')) {
             try {
                 await fetch(`/api/cancel/${activeTaskId}`, { method: 'POST' });
                 clearInterval(statusPollInterval);
@@ -472,11 +706,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resultMetaStats.textContent = `Completed in ${taskData.elapsed_seconds}s at ${taskData.fps} FPS • Lossless audio preserved`;
 
-        // Setup download button
         btnDownloadVideo.href = taskData.output_url;
         btnDownloadVideo.download = `crystal_clear_${currentVideoData.filename}`;
 
-        // Setup split comparison videos
         resultVideoClean.src = taskData.stream_url;
         resultVideoOrig.src = currentVideoData.file_url;
 
@@ -511,32 +743,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         window.addEventListener('mousemove', (e) => {
-            if (isDraggingSplit) {
-                updateSplit(e.clientX);
-            }
+            if (isDraggingSplit) updateSplit(e.clientX);
         });
 
-        window.addEventListener('mouseup', () => {
-            isDraggingSplit = false;
-        });
+        window.addEventListener('mouseup', () => { isDraggingSplit = false; });
 
-        // Touch support
-        splitDividerLine.addEventListener('touchstart', (e) => {
-            isDraggingSplit = true;
-        }, { passive: true });
-
+        splitDividerLine.addEventListener('touchstart', () => { isDraggingSplit = true; }, { passive: true });
         window.addEventListener('touchmove', (e) => {
-            if (isDraggingSplit && e.touches[0]) {
-                updateSplit(e.touches[0].clientX);
-            }
+            if (isDraggingSplit && e.touches[0]) updateSplit(e.touches[0].clientX);
         });
-
-        window.addEventListener('touchend', () => {
-            isDraggingSplit = false;
-        });
+        window.addEventListener('touchend', () => { isDraggingSplit = false; });
     }
 
-    // Synchronized comparison playback
     let isCompPlaying = false;
     btnPlayPauseComparison.addEventListener('click', () => {
         if (isCompPlaying) {
@@ -557,7 +775,6 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     });
 
-    // Helper: Format seconds to MM:SS
     function formatTime(seconds) {
         if (!seconds || isNaN(seconds)) return '00:00';
         const mins = Math.floor(seconds / 60);
@@ -565,7 +782,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 
-    // Helper: Format ETA seconds
     function formatETA(secs) {
         if (secs < 60) return `~${secs}s remaining`;
         const mins = Math.floor(secs / 60);

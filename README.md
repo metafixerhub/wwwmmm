@@ -4,25 +4,36 @@ A modern, user-friendly desktop web application designed to cleanly remove water
 
 ---
 
-## 🚀 Quick Start (Two Ways to Run)
+## 🌐 Vercel Deployment & Offline Quick Start
 
-### Option 1: 🌐 Frontend-Only Mode (Zero Server Needed)
-You can run this application **100% inside your browser** without running any backend or installing Python!
-- Simply open [`static/index.html`](file:///c:/Users/maksedul%20mandal/OneDrive/Desktop/watermark%20remover/static/index.html) in Google Chrome, Microsoft Edge, or Mozilla Firefox (or host it on **GitHub Pages**).
-- Videos are processed frame-by-frame directly inside the browser using HTML5 Canvas & MediaRecorder.
-- **100% Private**: Your video never leaves your computer.
+### 🚀 Deploy to Vercel (1-Click)
+This repository is configured for **zero-config instant Vercel deployment**!
+1. Go to [vercel.com/new](https://vercel.com/new).
+2. Import this GitHub repository: `https://github.com/metafixerhub/wwwmmm`.
+3. Click **Deploy**! Vercel will automatically serve the single-file frontend `index.html`.
 
-### Option 2: ⚡ Native Backend Mode (High-Speed FFmpeg + OpenCV)
-For very large 1080p/4K or long videos, run the native C++ backend for multi-threaded speed:
-- Simply **double-click** the batch launcher:
-  ```
-  start_app.bat
-  ```
-  *Or from terminal:*
-  ```bash
-  python run.py
-  ```
-- The frontend will automatically detect the backend and upgrade to **⚡ Native Backend Mode**!
+---
+
+## 💻 Start & Run Commands
+
+### 1. Offline Windows 1-Click Launch:
+- Double-click [**`start.bat`**](file:///c:/Users/maksedul%20mandal/OneDrive/Desktop/watermark%20remover/start.bat) or [**`run.bat`**](file:///c:/Users/maksedul%20mandal/OneDrive/Desktop/watermark%20remover/run.bat) to launch in your browser instantly.
+- **Works 100% offline**: zero WiFi or server needed.
+
+### 2. Terminal Commands (npm / npx):
+```bash
+# Start command:
+npm start
+
+# Run command:
+npm run dev
+```
+
+### 3. Python Local Server (Optional):
+```bash
+python -m http.server 3000
+```
+Then visit `http://localhost:3000`.
 
 
 ---

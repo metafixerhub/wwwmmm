@@ -154,11 +154,8 @@ class WatermarkInpainter:
                 elif self.mode == "telea":
                     inpainted_crop = cv2.inpaint(crop_img, crop_mask, self.inpaint_radius, cv2.INPAINT_TELEA)
                 else:
-                    # Crystal clear hybrid: Multi-scale Navier-Stokes with Telea edge guidance
-                    # Gives smooth gradients and preserves background texture
-                    inp_ns = cv2.inpaint(crop_img, crop_mask, self.inpaint_radius, cv2.INPAINT_NS)
-                    inp_tl = cv2.inpaint(crop_img, crop_mask, max(2, self.inpaint_radius - 1), cv2.INPAINT_TELEA)
-                    inpainted_crop = cv2.addWeighted(inp_ns, 0.65, inp_tl, 0.35, 0)
+                    # Ultra-fast Fast Marching Telea inpainting with seamless gradient blending
+                    inpainted_crop = cv2.inpaint(crop_img, crop_mask, min(3, self.inpaint_radius), cv2.INPAINT_TELEA)
 
                 # Temporal smoothing with previous frame to eliminate flicker
                 if self.temporal_blend > 0 and reg_idx in self.prev_inpainted_regions:

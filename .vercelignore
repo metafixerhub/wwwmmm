@@ -1,0 +1,14 @@
+# Ignore Python backend and Android files on Vercel
+# This ensures Vercel deploys purely as a fast static frontend (0 MB Lambda bundle)
+requirements.txt
+app.py
+run.py
+test_pipeline.py
+start_app.bat
+engine/
+android/
+uploads/
+outputs/
+scratch/
+__pycache__/
+*.py

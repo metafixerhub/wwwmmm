@@ -377,11 +377,11 @@ class ClientVideoProcessor {
         }
 
         // 1. Chunked Streaming Android Bridge inside APK
-        if (window.AndroidBridge && typeof window.AndroidBridge.startSave === 'function') {
+        if (window.AndroidBridge && window.AndroidBridge.startSave) {
             try {
-                const started = window.AndroidBridge.startSave(cleanName, cleanMime, blob.size);
+                const started = window.AndroidBridge.startSave(cleanName, cleanMime);
                 if (started) {
-                    const CHUNK_SIZE = 256 * 1024;
+                    const CHUNK_SIZE = 64 * 1024;
                     const totalChunks = Math.ceil(blob.size / CHUNK_SIZE);
                     for (let i = 0; i < totalChunks; i++) {
                         const start = i * CHUNK_SIZE;

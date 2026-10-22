@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
+import android.webkit.JsResult;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -80,6 +81,20 @@ public class MainActivity extends Activity {
             }
 
             @Override
+            public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                result.confirm();
+                return true;
+            }
+
+            @Override
+            public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                result.confirm();
+                return true;
+            }
+
+            @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
                                               FileChooserParams fileChooserParams) {
                 if (MainActivity.this.filePathCallback != null) {
@@ -112,8 +127,7 @@ public class MainActivity extends Activity {
             return true;
         }
 
-        @JavascriptInterface
-        public boolean startSave(final String filename, final String mimeType, final long totalBytes) {
+        private synchronized boolean initSaveInternal(final String filename, final String mimeType) {
             try {
                 cleanupTemp();
                 String cleanName = (filename != null && !filename.trim().isEmpty())
@@ -138,6 +152,7 @@ public class MainActivity extends Activity {
                 File cacheDir = getCacheDir();
                 tempSaveFile = new File(cacheDir, "temp_stream_" + System.currentTimeMillis() + "_" + cleanName);
                 tempSaveFos = new FileOutputStream(tempSaveFile);
+                Log.d("CrystalClear", "startSave initialized: " + cleanName + " (" + cleanMime + ")");
                 return true;
             } catch (Exception e) {
                 Log.e("CrystalClear", "startSave error", e);
@@ -147,9 +162,32 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public boolean appendChunk(final String base64Chunk) {
+        public boolean startSave(final String filename, final String mimeType) {
+            return initSaveInternal(filename, mimeType);
+        }
+
+        @JavascriptInterface
+        public boolean startSave(final String filename, final String mimeType, final double totalBytes) {
+            return initSaveInternal(filename, mimeType);
+        }
+
+        @JavascriptInterface
+        public boolean startSave(final String filename, final String mimeType, final int totalBytes) {
+            return initSaveInternal(filename, mimeType);
+        }
+
+        @JavascriptInterface
+        public boolean startSave(final String filename, final String mimeType, final String totalBytes) {
+            return initSaveInternal(filename, mimeType);
+        }
+
+        @JavascriptInterface
+        public synchronized boolean appendChunk(final String base64Chunk) {
             try {
-                if (tempSaveFos == null || base64Chunk == null) return false;
+                if (tempSaveFos == null || base64Chunk == null || base64Chunk.isEmpty()) {
+                    Log.w("CrystalClear", "appendChunk received null/empty or null stream");
+                    return false;
+                }
                 byte[] chunk = Base64.decode(base64Chunk, Base64.DEFAULT);
                 tempSaveFos.write(chunk);
                 return true;
@@ -160,7 +198,7 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
-        public boolean finishSave() {
+        public synchronized boolean finishSave() {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -180,6 +218,7 @@ public class MainActivity extends Activity {
                         final String saveMime = pendingMimeType;
                         final File sourceFile = tempSaveFile;
 
+                        Log.d("CrystalClear", "finishSave exporting file: " + sourceFile.length() + " bytes as " + saveName);
                         boolean saved = exportVideoToGalleryAndDownloads(sourceFile, saveName, saveMime);
                         if (saved) {
                             showToast("🎉 Video saved to Gallery & Downloads!");
@@ -202,7 +241,7 @@ public class MainActivity extends Activity {
             cleanupTemp();
         }
 
-        private void cleanupTemp() {
+        private synchronized void cleanupTemp() {
             try {
                 if (tempSaveFos != null) {
                     tempSaveFos.close();
@@ -274,6 +313,11 @@ public class MainActivity extends Activity {
 
                 ContentResolver resolver = getContentResolver();
                 Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+                if (uri == null) {
+                    values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES);
+                    uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+                }
+
                 if (uri != null) {
                     try (InputStream in = new FileInputStream(sourceFile);
                          OutputStream out = resolver.openOutputStream(uri)) {
@@ -283,6 +327,7 @@ public class MainActivity extends Activity {
                     values.put(MediaStore.Video.Media.IS_PENDING, 0);
                     resolver.update(uri, values, null, null);
                     savedAny = true;
+                    Log.d("CrystalClear", "Saved to MediaStore Video: " + uri);
                 }
             } catch (Exception e) {
                 Log.e("CrystalClear", "MediaStore Video insert failed", e);
@@ -298,6 +343,11 @@ public class MainActivity extends Activity {
 
                 ContentResolver resolver = getContentResolver();
                 Uri dlUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, dlValues);
+                if (dlUri == null) {
+                    dlValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                    dlUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, dlValues);
+                }
+
                 if (dlUri != null) {
                     try (InputStream in = new FileInputStream(sourceFile);
                          OutputStream out = resolver.openOutputStream(dlUri)) {
@@ -307,6 +357,7 @@ public class MainActivity extends Activity {
                     dlValues.put(MediaStore.Downloads.IS_PENDING, 0);
                     resolver.update(dlUri, dlValues, null, null);
                     savedAny = true;
+                    Log.d("CrystalClear", "Saved to MediaStore Downloads: " + dlUri);
                 }
             } catch (Exception e) {
                 Log.e("CrystalClear", "MediaStore Downloads insert failed", e);
@@ -335,6 +386,7 @@ public class MainActivity extends Activity {
                         null
                 );
                 savedAny = true;
+                Log.d("CrystalClear", "Saved via direct File writing: " + targetMovie.getAbsolutePath());
             } catch (Exception e) {
                 Log.e("CrystalClear", "Direct file save failed", e);
             }
@@ -354,6 +406,7 @@ public class MainActivity extends Activity {
                             null
                     );
                     savedAny = true;
+                    Log.d("CrystalClear", "Saved via getExternalFilesDir: " + target.getAbsolutePath());
                 }
             } catch (Exception e) {
                 Log.e("CrystalClear", "App external files save failed", e);

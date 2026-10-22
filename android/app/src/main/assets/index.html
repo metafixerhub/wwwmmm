@@ -768,6 +768,9 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(16, 185, 129, 0.45);
         }
+        button * {
+            pointer-events: none;
+        }
         .phone-tip-box {
             background: rgba(30, 41, 59, 0.7);
             border-radius: 8px;
@@ -1035,18 +1038,19 @@
                         <p style="font-size: 0.78rem; color: #cbd5e1;" id="resultTimeStats">Processed in 6s • Lossless audio kept</p>
                     </div>
                     <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-                        <button id="btnSaveGallery" class="btn-gallery">
+                        <button id="btnSaveGallery" class="btn-gallery" onclick="saveOrDownloadVideo(lastProcessedBlob, currentVideo ? currentVideo.name : 'video.mp4')">
                             📲 Save to Gallery / Phone
                         </button>
-                        <button id="btnDownload" class="btn-download">
+                        <button id="btnDownload" class="btn-download" onclick="saveOrDownloadVideo(lastProcessedBlob, currentVideo ? currentVideo.name : 'video.mp4')">
                             ⬇️ Direct Download
                         </button>
                         <button id="btnProcessAnother" class="btn-change">Process Another</button>
                     </div>
                 </div>
                 <div class="phone-tip-box">
-                    💡 <strong>Phone Tip:</strong> Tap <b>"Save to Gallery / Phone"</b> to save directly to your Photos or WhatsApp. You can also tap &amp; hold the clean video below to save it!
+                    💡 <strong>Phone Tip:</strong> Tap <b>"Save to Gallery / Phone"</b> or <b>"Direct Download"</b> to save to your device. You can also tap &amp; hold the clean video below to save it!
                 </div>
+                <div id="saveStatusNotification" style="display:none; padding: 0.75rem 1rem; border-radius: 10px; margin-top: 0.6rem; font-size: 0.85rem; font-weight: 600; text-align: center;"></div>
             </div>
 
             <!-- Comparison View -->
@@ -1669,9 +1673,16 @@
         });
 
         // --- 4. ULTRA SPEED VIDEO WATERMARK REMOVAL PIPELINE ---
-        btnStartProcess.addEventListener('click', async () => {
+        const handleStartProcess = async (e) => {
+            if (e) e.preventDefault();
             const box = selector.box;
-            if (!box) { alert('Please tap and drag over the watermark to draw a selection box!'); return; }
+            if (!box || box.width < 5 || box.height < 5) {
+                selectionHint.style.opacity = '1';
+                selectionHint.style.color = '#ef4444';
+                selectionHint.textContent = '👆 Please drag a box over the watermark to select it!';
+                alert('Please tap and drag over the watermark on the video to draw a selection box first!');
+                return;
+            }
             sourceVideo.pause();
             isCancelled = false;
 
@@ -1880,7 +1891,10 @@
 
             progressModal.style.display = 'none';
             showResult(lastProcessedUrl, totalElapsed);
-        });
+        };
+
+        btnStartProcess.addEventListener('click', handleStartProcess);
+        btnStartProcess.addEventListener('touchend', handleStartProcess);
 
         btnCancelProcess.addEventListener('click', () => {
             isCancelled = true;
@@ -1897,6 +1911,33 @@
         }
 
         // --- 5. UNIVERSAL MOBILE DOWNLOAD & GALLERY SAVER ---
+        let isSavingVideo = false;
+
+        function showSaveStatus(type, message) {
+            let statusBox = document.getElementById('saveStatusNotification');
+            if (!statusBox) {
+                statusBox = document.createElement('div');
+                statusBox.id = 'saveStatusNotification';
+                statusBox.style.cssText = 'padding: 0.75rem 1rem; border-radius: 10px; margin-top: 0.6rem; font-size: 0.85rem; font-weight: 600; text-align: center;';
+                const banner = document.querySelector('.success-banner');
+                if (banner) banner.appendChild(statusBox);
+            }
+            if (type === 'success') {
+                statusBox.style.background = '#064e3b';
+                statusBox.style.border = '1px solid #10b981';
+                statusBox.style.color = '#a7f3d0';
+            } else {
+                statusBox.style.background = '#7f1d1d';
+                statusBox.style.border = '1px solid #ef4444';
+                statusBox.style.color = '#fecaca';
+            }
+            statusBox.textContent = message;
+            statusBox.style.display = 'block';
+            setTimeout(() => {
+                if (statusBox) statusBox.style.display = 'none';
+            }, 6000);
+        }
+
         function readBlobSliceAsBase64(sliceBlob) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1909,17 +1950,19 @@
                         reject(new Error('Empty slice result'));
                     }
                 };
-                reader.onerror = reject;
+                reader.onerror = () => reject(new Error('FileReader slice read error'));
                 reader.readAsDataURL(sliceBlob);
             });
         }
 
         async function saveOrDownloadVideo(blob, baseFilename) {
+            if (isSavingVideo) return;
             if (!blob) {
-                alert('No cleaned video found. Please process a video first.');
+                showSaveStatus('error', '⚠️ No cleaned video found. Please process a video first.');
                 return;
             }
 
+            isSavingVideo = true;
             const isWebM = blob.type.includes('webm');
             const ext = isWebM ? '.webm' : '.mp4';
             const cleanName = (baseFilename || 'video').replace(/\.[^/.]+$/, '') + '_cleaned' + ext;
@@ -1931,16 +1974,13 @@
             // Visual feedback on download buttons
             const originalSaveHtml = btnSaveGallery.innerHTML;
             const originalDlHtml = btnDownload.innerHTML;
-            btnSaveGallery.innerHTML = '⏳ Preparing...';
-            btnDownload.innerHTML = '⏳ Preparing...';
-            btnSaveGallery.disabled = true;
-            btnDownload.disabled = true;
+            btnSaveGallery.innerHTML = '⏳ Saving (0%)...';
+            btnDownload.innerHTML = '⏳ Saving (0%)...';
 
             const restoreButtons = (successMsg) => {
+                isSavingVideo = false;
                 btnSaveGallery.innerHTML = successMsg || originalSaveHtml;
                 btnDownload.innerHTML = successMsg || originalDlHtml;
-                btnSaveGallery.disabled = false;
-                btnDownload.disabled = false;
                 if (successMsg) {
                     setTimeout(() => {
                         btnSaveGallery.innerHTML = originalSaveHtml;
@@ -1950,11 +1990,12 @@
             };
 
             // 1. AndroidBridge (High-speed chunked streaming inside APK wrapper)
-            if (window.AndroidBridge && typeof window.AndroidBridge.startSave === 'function') {
+            if (window.AndroidBridge && window.AndroidBridge.startSave) {
                 try {
-                    const started = window.AndroidBridge.startSave(cleanName, cleanMime, blob.size);
+                    // Call startSave with 2 parameters (cleanName, cleanMime) - safe for all JNI bindings
+                    const started = window.AndroidBridge.startSave(cleanName, cleanMime);
                     if (started) {
-                        const CHUNK_SIZE = 256 * 1024; // 256 KB safe chunk size (below IPC / Binder limits)
+                        const CHUNK_SIZE = 64 * 1024; // 64 KB slices: instant, zero IPC limits
                         const totalChunks = Math.ceil(blob.size / CHUNK_SIZE);
 
                         for (let i = 0; i < totalChunks; i++) {
@@ -1973,11 +2014,13 @@
                         }
 
                         window.AndroidBridge.finishSave();
-                        restoreButtons('🎉 Saved to Gallery!');
+                        showSaveStatus('success', '🎉 Cleaned video saved to Gallery & Downloads!');
+                        restoreButtons('✅ Saved to Gallery!');
                         return;
                     }
                 } catch (e) {
                     console.error('AndroidBridge chunked save error:', e);
+                    showSaveStatus('error', '⚠️ Android save error: ' + (e.message || e));
                     if (window.AndroidBridge.cancelSave) {
                         window.AndroidBridge.cancelSave();
                     }
@@ -1985,13 +2028,14 @@
             }
 
             // Legacy AndroidBridge fallback (if only saveVideoBase64 exists)
-            if (window.AndroidBridge && typeof window.AndroidBridge.saveVideoBase64 === 'function') {
+            if (window.AndroidBridge && window.AndroidBridge.saveVideoBase64) {
                 try {
                     const reader = new FileReader();
                     reader.onloadend = () => {
                         const base64 = reader.result.split(',')[1];
                         window.AndroidBridge.saveVideoBase64(base64, cleanName, cleanMime);
-                        restoreButtons('🎉 Saved to Gallery!');
+                        showSaveStatus('success', '🎉 Cleaned video saved to Gallery & Downloads!');
+                        restoreButtons('✅ Saved to Gallery!');
                     };
                     reader.readAsDataURL(blob);
                     return;
@@ -2009,7 +2053,8 @@
                         title: 'CrystalClear Video',
                         text: 'Watermark removed with CrystalClear AI'
                     });
-                    restoreButtons('✅ Shared Successfully!');
+                    showSaveStatus('success', '✅ Video shared / saved successfully!');
+                    restoreButtons('✅ Shared!');
                     return;
                 } catch (err) {
                     if (err.name === 'AbortError') {
@@ -2020,29 +2065,39 @@
             }
 
             // 3. Fallback direct browser download
-            const blobUrl = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = blobUrl;
-            a.download = cleanName;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(blobUrl);
-                restoreButtons('⬇️ Downloaded!');
-            }, 1500);
+            try {
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = cleanName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                    showSaveStatus('success', '⬇️ Video downloaded successfully!');
+                    restoreButtons('⬇️ Downloaded!');
+                }, 1500);
+            } catch (err) {
+                showSaveStatus('error', 'Download error: ' + err.message);
+                restoreButtons();
+            }
         }
 
-        btnSaveGallery.addEventListener('click', (e) => {
-            if (e) e.preventDefault();
+        const triggerSave = (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             saveOrDownloadVideo(lastProcessedBlob, currentVideo ? currentVideo.name : 'video.mp4');
-        });
+        };
 
-        btnDownload.addEventListener('click', (e) => {
-            if (e) e.preventDefault();
-            saveOrDownloadVideo(lastProcessedBlob, currentVideo ? currentVideo.name : 'video.mp4');
-        });
+        btnSaveGallery.addEventListener('click', triggerSave);
+        btnSaveGallery.addEventListener('touchend', triggerSave);
+
+        btnDownload.addEventListener('click', triggerSave);
+        btnDownload.addEventListener('touchend', triggerSave);
 
         function showResult(url, elapsed) {
             editorSection.style.display = 'none';

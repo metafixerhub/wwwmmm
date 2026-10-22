@@ -58,19 +58,19 @@ jobs:
       - name: Create or Update GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.1.1' }}
-          name: "Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.1.1' }} - Ultra Speed APK & Fixed Mobile Download"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.1.2' }}
+          name: "Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.1.2' }} - Fixed Mobile Download & Save to Gallery"
           body: |
-            ### 📱 CrystalClear Video Watermark Remover - v1.1.1 Release
+            ### 📱 CrystalClear Video Watermark Remover - v1.1.2 Release
             
             Download the Android APK file below to install and run the app directly on your Android phone!
             
             - **Filename**: `CrystalClear-Watermark-Remover.apk`
-            - **Chunked Streaming Download**: Solved the mobile download issue using high-speed 256 KB chunked streaming through AndroidBridge, eliminating Android Binder IPC string limitations.
+            - **Guaranteed Button Action**: Fully resolved the button unresponsive issue with zero-latency 64 KB chunk streaming, resilient JNI type signatures, and direct onclick handlers.
+            - **Live Saving Progress & UI Alerts**: Buttons show real-time percentage progress while saving, with clear on-screen confirmation banners upon completion.
             - **Dual MediaStore & Downloads Saving**: Saves clean videos to both `Movies/CrystalClear` (for Gallery / Google Photos) and `Download/CrystalClear` (for Files / Downloads manager).
-            - **Non-blocking Background I/O**: Video decoding and disk writes run on dedicated worker threads, ensuring the UI never stutters.
+            - **Native Android Alerts**: Native alert dialogs and toast notifications.
             - **Ultra Speed GPU Inpainting**: Hardware-accelerated forward decode running at 30–60 FPS (zero seek lag).
-            - **Look-Up Table (LUT) Math**: Precomputed mathematical weights with zero Math.cos() inside pixel loops for 20x+ CPU speedup.
             - **100% Offline & Private**: Videos never leave your device.
           files: build_output/CrystalClear-Watermark-Remover.apk
         env:

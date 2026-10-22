@@ -367,28 +367,69 @@ class ClientVideoProcessor {
      * Universal Mobile & Desktop Video Downloader & Gallery Saver.
      */
     static async saveOrDownload(blob, originalFilename) {
+        if (!blob) return { success: false, method: 'no_blob' };
         const isWebM = blob.type.includes('webm');
         const ext = isWebM ? '.webm' : '.mp4';
         const cleanName = (originalFilename || 'video').replace(/\.[^/.]+$/, '') + '_cleaned' + ext;
+        let cleanMime = blob.type.split(';')[0].trim();
+        if (!cleanMime || cleanMime === 'application/octet-stream') {
+            cleanMime = isWebM ? 'video/webm' : 'video/mp4';
+        }
 
-        // 1. Check Native Android Bridge inside APK
-        if (window.AndroidBridge && window.AndroidBridge.saveVideoBase64) {
+        // 1. Chunked Streaming Android Bridge inside APK
+        if (window.AndroidBridge && typeof window.AndroidBridge.startSave === 'function') {
+            try {
+                const started = window.AndroidBridge.startSave(cleanName, cleanMime, blob.size);
+                if (started) {
+                    const CHUNK_SIZE = 256 * 1024;
+                    const totalChunks = Math.ceil(blob.size / CHUNK_SIZE);
+                    for (let i = 0; i < totalChunks; i++) {
+                        const start = i * CHUNK_SIZE;
+                        const end = Math.min(blob.size, start + CHUNK_SIZE);
+                        const slice = blob.slice(start, end);
+                        const chunkBase64 = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                                if (reader.result) {
+                                    const res = reader.result;
+                                    const commaIdx = res.indexOf(',');
+                                    resolve(commaIdx >= 0 ? res.substring(commaIdx + 1) : res);
+                                } else {
+                                    reject(new Error('Empty slice'));
+                                }
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(slice);
+                        });
+                        const ok = window.AndroidBridge.appendChunk(chunkBase64);
+                        if (!ok) throw new Error('Append chunk failed: ' + i);
+                    }
+                    window.AndroidBridge.finishSave();
+                    return { success: true, method: 'android_bridge' };
+                }
+            } catch (e) {
+                console.warn('AndroidBridge chunked save failed, falling back:', e);
+                if (window.AndroidBridge.cancelSave) window.AndroidBridge.cancelSave();
+            }
+        }
+
+        // Legacy AndroidBridge fallback
+        if (window.AndroidBridge && typeof window.AndroidBridge.saveVideoBase64 === 'function') {
             try {
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result.split(',')[1];
-                    window.AndroidBridge.saveVideoBase64(base64, cleanName, blob.type);
+                    window.AndroidBridge.saveVideoBase64(base64, cleanName, cleanMime);
                 };
                 reader.readAsDataURL(blob);
-                return { success: true, method: 'android_bridge' };
+                return { success: true, method: 'android_bridge_legacy' };
             } catch (e) {
-                console.warn('AndroidBridge call failed, falling back:', e);
+                console.warn('Legacy AndroidBridge call failed:', e);
             }
         }
 
         // 2. Web Share API (Mobile Browsers: iOS Safari & Android Chrome)
-        // Allows direct "Save to Photos / Camera Roll" or sharing to apps
-        const file = new File([blob], cleanName, { type: blob.type });
+        const file = new File([blob], cleanName, { type: cleanMime });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
                 await navigator.share({

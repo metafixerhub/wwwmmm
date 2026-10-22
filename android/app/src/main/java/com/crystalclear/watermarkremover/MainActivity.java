@@ -12,7 +12,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
+import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -21,7 +23,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 public class MainActivity extends Activity {
@@ -52,6 +56,8 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+        settings.setAllowFileAccessFromFileURLs(true);
+        settings.setAllowUniversalAccessFromFileURLs(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
@@ -60,11 +66,19 @@ public class MainActivity extends Activity {
         // Hardware Acceleration for Ultra-Fast GPU Canvas rendering
         webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null);
 
-        // Native Android Bridge for direct saving to Gallery / Photos
+        // Native Android Bridge for chunked streaming save to Gallery & Downloads
         webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
 
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Log.d("CrystalClearJS", consoleMessage.message() + " -- Line "
+                        + consoleMessage.lineNumber() + " of "
+                        + consoleMessage.sourceId());
+                return true;
+            }
+
             @Override
             public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback,
                                               FileChooserParams fileChooserParams) {
@@ -84,74 +98,294 @@ public class MainActivity extends Activity {
 
     /**
      * Native Android Bridge accessible from JavaScript:
-     * Saves processed video bytes directly to the phone's public Movies / Gallery folder.
+     * Provides chunked streaming to write videos directly to Gallery & Downloads
+     * without hitting Android Binder / IPC message size limits.
      */
     public class AndroidBridge {
+        private File tempSaveFile = null;
+        private FileOutputStream tempSaveFos = null;
+        private String pendingFilename = null;
+        private String pendingMimeType = null;
+
         @JavascriptInterface
         public boolean isAndroidApp() {
             return true;
         }
 
         @JavascriptInterface
-        public void saveVideoBase64(final String base64Data, final String filename, final String mimeType) {
-            runOnUiThread(new Runnable() {
+        public boolean startSave(final String filename, final String mimeType, final long totalBytes) {
+            try {
+                cleanupTemp();
+                String cleanName = (filename != null && !filename.trim().isEmpty())
+                        ? filename.trim().replaceAll("[\\\\/:*?\"<>|]", "_")
+                        : "crystal_clear_" + System.currentTimeMillis() + ".mp4";
+
+                if (!cleanName.endsWith(".mp4") && !cleanName.endsWith(".webm")) {
+                    cleanName += ".mp4";
+                }
+
+                String cleanMime = (mimeType != null) ? mimeType.trim() : "";
+                if (cleanMime.contains(";")) {
+                    cleanMime = cleanMime.substring(0, cleanMime.indexOf(";")).trim();
+                }
+                if (cleanMime.isEmpty() || cleanMime.equals("application/octet-stream")) {
+                    cleanMime = cleanName.endsWith(".webm") ? "video/webm" : "video/mp4";
+                }
+
+                pendingFilename = cleanName;
+                pendingMimeType = cleanMime;
+
+                File cacheDir = getCacheDir();
+                tempSaveFile = new File(cacheDir, "temp_stream_" + System.currentTimeMillis() + "_" + cleanName);
+                tempSaveFos = new FileOutputStream(tempSaveFile);
+                return true;
+            } catch (Exception e) {
+                Log.e("CrystalClear", "startSave error", e);
+                showToast("Failed to initialize save: " + e.getMessage());
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean appendChunk(final String base64Chunk) {
+            try {
+                if (tempSaveFos == null || base64Chunk == null) return false;
+                byte[] chunk = Base64.decode(base64Chunk, Base64.DEFAULT);
+                tempSaveFos.write(chunk);
+                return true;
+            } catch (Exception e) {
+                Log.e("CrystalClear", "appendChunk error", e);
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public boolean finishSave() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        byte[] videoBytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT);
-                        String cleanFilename = (filename != null && !filename.trim().isEmpty()) ? filename : "crystal_clear_" + System.currentTimeMillis() + ".mp4";
-                        String cleanMime = (mimeType != null && !mimeType.trim().isEmpty()) ? mimeType : "video/mp4";
+                        if (tempSaveFos != null) {
+                            tempSaveFos.flush();
+                            tempSaveFos.close();
+                            tempSaveFos = null;
+                        }
 
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            android.content.ContentValues values = new android.content.ContentValues();
-                            values.put(android.provider.MediaStore.Video.Media.DISPLAY_NAME, cleanFilename);
-                            values.put(android.provider.MediaStore.Video.Media.MIME_TYPE, cleanMime);
-                            values.put(android.provider.MediaStore.Video.Media.RELATIVE_PATH, android.os.Environment.DIRECTORY_MOVIES + "/CrystalClear");
-                            values.put(android.provider.MediaStore.Video.Media.IS_PENDING, 1);
+                        if (tempSaveFile == null || !tempSaveFile.exists() || tempSaveFile.length() == 0) {
+                            showToast("Download error: No video data received.");
+                            return;
+                        }
 
-                            android.content.ContentResolver resolver = getContentResolver();
-                            Uri collection = android.provider.MediaStore.Video.Media.getContentUri(android.provider.MediaStore.VOLUME_EXTERNAL_PRIMARY);
-                            Uri itemUri = resolver.insert(collection, values);
+                        final String saveName = pendingFilename;
+                        final String saveMime = pendingMimeType;
+                        final File sourceFile = tempSaveFile;
 
-                            if (itemUri != null) {
-                                java.io.OutputStream os = resolver.openOutputStream(itemUri);
-                                if (os != null) {
-                                    os.write(videoBytes);
-                                    os.flush();
-                                    os.close();
-                                }
-                                values.clear();
-                                values.put(android.provider.MediaStore.Video.Media.IS_PENDING, 0);
-                                resolver.update(itemUri, values, null, null);
-
-                                android.widget.Toast.makeText(MainActivity.this, "🎉 Video saved to Gallery / Movies!", android.widget.Toast.LENGTH_LONG).show();
-                            }
+                        boolean saved = exportVideoToGalleryAndDownloads(sourceFile, saveName, saveMime);
+                        if (saved) {
+                            showToast("🎉 Video saved to Gallery & Downloads!");
                         } else {
-                            java.io.File moviesDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_MOVIES);
-                            java.io.File appDir = new java.io.File(moviesDir, "CrystalClear");
-                            if (!appDir.exists()) appDir.mkdirs();
-                            java.io.File outFile = new java.io.File(appDir, cleanFilename);
-
-                            java.io.FileOutputStream fos = new java.io.FileOutputStream(outFile);
-                            fos.write(videoBytes);
-                            fos.flush();
-                            fos.close();
-
-                            android.media.MediaScannerConnection.scanFile(
-                                MainActivity.this,
-                                new String[]{outFile.getAbsolutePath()},
-                                new String[]{cleanMime},
-                                null
-                            );
-                            android.widget.Toast.makeText(MainActivity.this, "🎉 Video saved to Gallery: " + outFile.getName(), android.widget.Toast.LENGTH_LONG).show();
+                            showToast("⚠️ Could not write to storage. Check app permissions.");
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        android.widget.Toast.makeText(MainActivity.this, "Download error: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+                        Log.e("CrystalClear", "finishSave error", e);
+                        showToast("Download error: " + e.getMessage());
+                    } finally {
+                        cleanupTemp();
                     }
                 }
-            });
+            }).start();
+            return true;
         }
+
+        @JavascriptInterface
+        public void cancelSave() {
+            cleanupTemp();
+        }
+
+        private void cleanupTemp() {
+            try {
+                if (tempSaveFos != null) {
+                    tempSaveFos.close();
+                    tempSaveFos = null;
+                }
+                if (tempSaveFile != null && tempSaveFile.exists()) {
+                    tempSaveFile.delete();
+                    tempSaveFile = null;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        @JavascriptInterface
+        public void saveVideoBase64(final String base64Data, final String filename, final String mimeType) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    File cacheFile = null;
+                    try {
+                        byte[] videoBytes = Base64.decode(base64Data, Base64.DEFAULT);
+                        String cleanName = (filename != null && !filename.trim().isEmpty())
+                                ? filename.trim().replaceAll("[\\\\/:*?\"<>|]", "_")
+                                : "crystal_clear_" + System.currentTimeMillis() + ".mp4";
+                        String cleanMime = (mimeType != null) ? mimeType.trim() : "";
+                        if (cleanMime.contains(";")) {
+                            cleanMime = cleanMime.substring(0, cleanMime.indexOf(";")).trim();
+                        }
+                        if (cleanMime.isEmpty()) {
+                            cleanMime = cleanName.endsWith(".webm") ? "video/webm" : "video/mp4";
+                        }
+
+                        cacheFile = new File(getCacheDir(), "legacy_" + cleanName);
+                        FileOutputStream fos = new FileOutputStream(cacheFile);
+                        fos.write(videoBytes);
+                        fos.flush();
+                        fos.close();
+
+                        boolean ok = exportVideoToGalleryAndDownloads(cacheFile, cleanName, cleanMime);
+                        if (ok) {
+                            showToast("🎉 Video saved to Gallery & Downloads!");
+                        } else {
+                            showToast("⚠️ Save error. Check storage permissions.");
+                        }
+                    } catch (Exception e) {
+                        Log.e("CrystalClear", "saveVideoBase64 error", e);
+                        showToast("Download error: " + e.getMessage());
+                    } finally {
+                        if (cacheFile != null && cacheFile.exists()) {
+                            cacheFile.delete();
+                        }
+                    }
+                }
+            }).start();
+        }
+    }
+
+    private boolean exportVideoToGalleryAndDownloads(File sourceFile, String filename, String mimeType) {
+        boolean savedAny = false;
+
+        // 1. Android 10+ (API 29+) Scoped Storage via MediaStore
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Save to MediaStore Video (Movies / Gallery)
+            try {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Video.Media.DISPLAY_NAME, filename);
+                values.put(MediaStore.Video.Media.MIME_TYPE, mimeType);
+                values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/CrystalClear");
+                values.put(MediaStore.Video.Media.IS_PENDING, 1);
+
+                ContentResolver resolver = getContentResolver();
+                Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+                if (uri != null) {
+                    try (InputStream in = new FileInputStream(sourceFile);
+                         OutputStream out = resolver.openOutputStream(uri)) {
+                        copyStream(in, out);
+                    }
+                    values.clear();
+                    values.put(MediaStore.Video.Media.IS_PENDING, 0);
+                    resolver.update(uri, values, null, null);
+                    savedAny = true;
+                }
+            } catch (Exception e) {
+                Log.e("CrystalClear", "MediaStore Video insert failed", e);
+            }
+
+            // Also save a copy to MediaStore Downloads folder
+            try {
+                ContentValues dlValues = new ContentValues();
+                dlValues.put(MediaStore.Downloads.DISPLAY_NAME, filename);
+                dlValues.put(MediaStore.Downloads.MIME_TYPE, mimeType);
+                dlValues.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/CrystalClear");
+                dlValues.put(MediaStore.Downloads.IS_PENDING, 1);
+
+                ContentResolver resolver = getContentResolver();
+                Uri dlUri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, dlValues);
+                if (dlUri != null) {
+                    try (InputStream in = new FileInputStream(sourceFile);
+                         OutputStream out = resolver.openOutputStream(dlUri)) {
+                        copyStream(in, out);
+                    }
+                    dlValues.clear();
+                    dlValues.put(MediaStore.Downloads.IS_PENDING, 0);
+                    resolver.update(dlUri, dlValues, null, null);
+                    savedAny = true;
+                }
+            } catch (Exception e) {
+                Log.e("CrystalClear", "MediaStore Downloads insert failed", e);
+            }
+        }
+
+        // 2. Direct File writing for Android 9 and lower, or if MediaStore above failed
+        if (!savedAny) {
+            try {
+                File moviesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+                File appMoviesDir = new File(moviesDir, "CrystalClear");
+                if (!appMoviesDir.exists()) appMoviesDir.mkdirs();
+                File targetMovie = new File(appMoviesDir, filename);
+                copyFile(sourceFile, targetMovie);
+
+                File dlDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File appDlDir = new File(dlDir, "CrystalClear");
+                if (!appDlDir.exists()) appDlDir.mkdirs();
+                File targetDl = new File(appDlDir, filename);
+                copyFile(sourceFile, targetDl);
+
+                MediaScannerConnection.scanFile(
+                        MainActivity.this,
+                        new String[]{targetMovie.getAbsolutePath(), targetDl.getAbsolutePath()},
+                        new String[]{mimeType, mimeType},
+                        null
+                );
+                savedAny = true;
+            } catch (Exception e) {
+                Log.e("CrystalClear", "Direct file save failed", e);
+            }
+        }
+
+        // 3. Fallback to app external files dir (always writable on all Android versions)
+        if (!savedAny) {
+            try {
+                File extDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+                if (extDir != null) {
+                    File target = new File(extDir, filename);
+                    copyFile(sourceFile, target);
+                    MediaScannerConnection.scanFile(
+                            MainActivity.this,
+                            new String[]{target.getAbsolutePath()},
+                            new String[]{mimeType},
+                            null
+                    );
+                    savedAny = true;
+                }
+            } catch (Exception e) {
+                Log.e("CrystalClear", "App external files save failed", e);
+            }
+        }
+
+        return savedAny;
+    }
+
+    private void copyStream(InputStream in, OutputStream out) throws java.io.IOException {
+        byte[] buf = new byte[65536];
+        int len;
+        while ((len = in.read(buf)) > 0) {
+            out.write(buf, 0, len);
+        }
+        out.flush();
+    }
+
+    private void copyFile(File src, File dst) throws java.io.IOException {
+        try (InputStream in = new FileInputStream(src);
+             OutputStream out = new FileOutputStream(dst)) {
+            copyStream(in, out);
+        }
+    }
+
+    private void showToast(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
@@ -184,8 +418,13 @@ public class MainActivity extends Activity {
                 requestPermissions(new String[]{android.Manifest.permission.READ_MEDIA_VIDEO}, PERMISSION_REQUEST_CODE);
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE, android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            boolean readGranted = checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+            boolean writeGranted = checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+            if (!readGranted || !writeGranted) {
+                requestPermissions(new String[]{
+                        android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                        android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+                }, PERMISSION_REQUEST_CODE);
             }
         }
     }

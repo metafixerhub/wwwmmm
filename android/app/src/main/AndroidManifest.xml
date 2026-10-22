@@ -15,7 +15,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CrystalClear"
         android:hardwareAccelerated="true"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
